@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Admin Portal - Nafasat Fashion & Rentals</title>
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="admin-body">
+
+  <!-- =========================================================================
+       ADMIN HEADER & NAVIGATION
+       ========================================================================= -->
+  <header class="admin-header">
+    <div class="admin-header-container">
+      <div class="admin-brand">
+        <a href="/" class="brand-link">
+          <img src="assets/logo.png" alt="Nafasat Logo" class="admin-logo-img">
+          <div class="admin-brand-text">
+            <span class="admin-brand-title">NAFASAT</span>
+            <span class="admin-portal-badge"><i class="fa-solid fa-shield-halved"></i> Admin Portal</span>
+          </div>
+        </a>
+      </div>
+
+      <div class="admin-header-actions" id="adminHeaderActions">
+        <a href="/" class="btn btn-outline" target="_blank">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live Catalogue
+        </a>
+        <button id="adminLogoutBtn" class="btn btn-secondary btn-sm hidden">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       MAIN CONTAINER
+       ========================================================================= -->
+  <main class="admin-main">
+
+    <!-- LOGIN SCREEN -->
+    <section id="loginSection" class="admin-login-section">
+      <div class="admin-login-card">
+        <div class="login-header">
+          <div class="login-icon-wrap">
+            <i class="fa-solid fa-lock"></i>
+          </div>
+          <h2>Staff Authentication</h2>
+          <p>Enter your boutique manager credentials to access catalogue controls.</p>
+        </div>
+
+        <form id="loginForm" class="admin-form">
+          <div id="loginError" class="alert alert-danger hidden">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="loginErrorText">Invalid username or password</span>
+          </div>
+
+          <div class="form-group">
+            <label for="usernameInput"><i class="fa-solid fa-user"></i> Username</label>
+            <input type="text" id="usernameInput" class="form-control" placeholder="admin" value="admin" required autocomplete="username">
+          </div>
+
+          <div class="form-group">
+            <label for="passwordInput"><i class="fa-solid fa-key"></i> Password</label>
+            <input type="password" id="passwordInput" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+
+          <button type="submit" id="loginSubmitBtn" class="btn btn-primary btn-block">
+            <span>Sign In to Dashboard</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </form>
+
+        <div class="login-footer">
+          <small><i class="fa-solid fa-shield-check"></i> Nafasat Fashion & Rentals &bull; Secure Portal</small>
+        </div>
+      </div>
+    </section>
+
+    <!-- DASHBOARD (Visible when logged in) -->
+    <section id="dashboardSection" class="admin-dashboard-section hidden">
+      
+      <!-- Live Stats Row -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon gold"><i class="fa-solid fa-vest-patches"></i></div>
+          <div class="stat-content">
+            <span class="stat-label">Total Outfits</span>
+            <h3 id="statTotalItems" class="stat-number">--</h3>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue"><i class="fa-solid fa-layer-group"></i></div>
+          <div class="stat-content">
+            <span class="stat-label">Active Categories</span>
+            <h3 id="statTotalCategories" class="stat-number">--</h3>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green"><i class="fa-solid fa-camera-retro"></i></div>
+          <div class="stat-content">
+            <span class="stat-label">Catalogue Status</span>
+            <h3 class="stat-number text-success"><i class="fa-solid fa-circle-check"></i> Live</h3>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Admin Content Tabs -->
+      <div class="admin-tabs-nav">
+        <button class="tab-btn active" data-tab="addOutfitTab">
+          <i class="fa-solid fa-circle-plus"></i> Add New Outfit
+        </button>
+        <button class="tab-btn" data-tab="manageOutfitsTab">
+          <i class="fa-solid fa-list-check"></i> Manage Outfits (<span id="tabCountBadge">--</span>)
+        </button>
+      </div>
+
+      <!-- TAB 1: ADD NEW OUTFIT -->
+      <div id="addOutfitTab" class="tab-pane active">
+        <div class="admin-panel">
+          <div class="panel-header">
+            <div>
+              <h3><i class="fa-solid fa-plus-circle text-gold"></i> Add New Outfit to Catalogue</h3>
+              <p class="panel-subtitle">Upload the mannequin dummy photo and outfit details. It will immediately appear on the shop showroom.</p>
+            </div>
+          </div>
+
+          <form id="addOutfitForm" class="add-outfit-form" enctype="multipart/form-data">
+            
+            <div class="form-grid-2">
+              
+              <!-- LEFT COLUMN: Outfit Details -->
+              <div class="form-column">
+                <h4 class="form-section-title"><i class="fa-solid fa-info-circle"></i> Outfit Information</h4>
+
+                <!-- Category -->
+                <div class="form-group">
+                  <label for="outfitCategory" class="required-label">Category</label>
+                  <select id="outfitCategory" name="category_id" class="form-control" required>
+                    <option value="" disabled selected>Select Category...</option>
+                    <option value="rental-bridal">Bridal Wear</option>
+                    <option value="female-partywear">Party Wear</option>
+                    <option value="jewelry">Jewelry</option>
+                    <option value="kids-rental">Girls Rental</option>
+                    <option value="kids-coatpant">Boys Coat-Pants</option>
+                    <option value="saree">Sarees</option>
+                    <option value="purses">Clutches & Purses</option>
+                    <option value="shoes">Footwear</option>
+                    <option value="kids-sherwani">Boys Sherwani</option>
+                  </select>
+                </div>
+
+                <!-- Item Code / SKU -->
+                <div class="form-group">
+                  <label for="outfitSku" class="required-label">Item Code / SKU</label>
+                  <div class="input-with-hint">
+                    <input type="text" id="outfitSku" name="sku" class="form-control text-uppercase" placeholder="e.g. NRFAB0085 or NPS0012" required>
+                    <small class="field-hint">Unique boutique tag code printed on the dress</small>
+                  </div>
+                </div>
+
+                <!-- Color & Standard Filter Bucket -->
+                <div class="form-row-2">
+                  <div class="form-group">
+                    <label for="outfitColor" class="required-label">Color Description</label>
+                    <input type="text" id="outfitColor" name="color" class="form-control" placeholder="e.g. Deep Maroon & Gold" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="outfitStdColor">Filter Color Group</label>
+                    <select id="outfitStdColor" name="standard_color" class="form-control">
+                      <option value="Red & Maroon">Red & Maroon</option>
+                      <option value="Pink & Peach">Pink & Peach</option>
+                      <option value="Blue & Ferozi">Blue & Ferozi</option>
+                      <option value="Green & Emerald">Green & Emerald</option>
+                      <option value="Gold & Yellow">Gold & Yellow</option>
+                      <option value="White & Silver">White & Silver</option>
+                      <option value="Black">Black</option>
+                      <option value="Purple & Plum">Purple & Plum</option>
+                      <option value="Multi & Other" selected>Multi & Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Size & Standard Size -->
+                <div class="form-row-2">
+                  <div class="form-group">
+                    <label for="outfitSize" class="required-label">Size</label>
+                    <input type="text" id="outfitSize" name="size" class="form-control" placeholder="e.g. Medium (38) or Free Size" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="outfitStdSize">Filter Size Group</label>
+                    <select id="outfitStdSize" name="standard_size" class="form-control">
+                      <option value="XS">XS</option>
+                      <option value="Small">Small</option>
+                      <option value="Medium" selected>Medium</option>
+                      <option value="Large">Large</option>
+                      <option value="XL">XL</option>
+                      <option value="Free Size">Free Size</option>
+                      <option value="Kids">Kids</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Rent & Security Deposit -->
+                <div class="form-row-2">
+                  <div class="form-group">
+                    <label for="outfitRent">Rental Price (Rs.)</label>
+                    <input type="number" id="outfitRent" name="rent" class="form-control" placeholder="e.g. 3500">
+                  </div>
+                  <div class="form-group">
+                    <label for="outfitDeposit">Security Deposit (Rs.)</label>
+                    <input type="number" id="outfitDeposit" name="deposit" class="form-control" placeholder="e.g. 7000">
+                  </div>
+                </div>
+
+                <!-- Description -->
+                <div class="form-group">
+                  <label for="outfitDescription">Description & Fabric Notes</label>
+                  <textarea id="outfitDescription" name="description" class="form-control" rows="3" placeholder="e.g. Pure raw silk maxi with heavy hand-worked zardozi, accompanied by net dupatta and matching pouch."></textarea>
+                </div>
+
+              </div>
+
+              <!-- RIGHT COLUMN: Photo Uploads -->
+              <div class="form-column">
+                <h4 class="form-section-title"><i class="fa-solid fa-images"></i> Outfit Photography</h4>
+
+                <!-- 1. PRIMARY DUMMY / MANNEQUIN PHOTO (MANDATORY) -->
+                <div class="upload-box-wrapper">
+                  <div class="upload-label-row">
+                    <span class="required-label font-bold">1. Primary Mannequin / Dummy Photo</span>
+                    <span class="badge-tag badge-gold">Required &bull; Front Display</span>
+                  </div>
+                  <p class="field-hint-top">This photo is displayed on the main showroom card. Always upload the <strong>full-length mannequin</strong> image here.</p>
+                  
+                  <div class="dropzone" id="dummyDropzone">
+                    <input type="file" id="dummyImageInput" name="dummy_image" accept="image/png,image/jpeg,image/webp,image/jpg" class="file-input-hidden" required>
+                    <div class="dropzone-empty" id="dummyDropzoneEmpty">
+                      <div class="dropzone-icon"><i class="fa-solid fa-person-dress"></i></div>
+                      <p class="dropzone-prompt"><strong>Click to browse</strong> or drag & drop mannequin photo</p>
+                      <span class="dropzone-subtext">JPG, PNG, or WEBP (up to 20MB)</span>
+                    </div>
+                    <div class="dropzone-preview hidden" id="dummyDropzonePreview">
+                      <div class="preview-img-container">
+                        <img id="dummyPreviewImg" src="" alt="Dummy preview">
+                        <button type="button" class="preview-remove-btn" id="removeDummyBtn" title="Remove image">
+                          <i class="fa-solid fa-xmark"></i>
+                        </button>
+                      </div>
+                      <div class="preview-meta">
+                        <span id="dummyFileName" class="preview-name">dummy.jpg</span>
+                        <span class="preview-tag"><i class="fa-solid fa-check"></i> Display Photo Ready</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 2. ADDITIONAL ANGLE PHOTOS (OPTIONAL) -->
+                <div class="upload-box-wrapper mt-4">
+                  <div class="upload-label-row">
+                    <span class="font-bold">2. Additional Angles & Close-ups</span>
+                    <span class="badge-tag badge-subtle">Optional &bull; Multi-select</span>
+                  </div>
+                  <p class="field-hint-top">Upload back angle, close-up embroidery details, dupatta, and price tags. Customers see these when they tap the outfit card.</p>
+                  
+                  <div class="dropzone" id="anglesDropzone">
+                    <input type="file" id="angleImagesInput" name="angle_images" accept="image/png,image/jpeg,image/webp,image/jpg" class="file-input-hidden" multiple>
+                    <div class="dropzone-empty" id="anglesDropzoneEmpty">
+                      <div class="dropzone-icon"><i class="fa-solid fa-photo-film"></i></div>
+                      <p class="dropzone-prompt"><strong>Click to select multiple photos</strong> or drag here</p>
+                      <span class="dropzone-subtext">Select all angle and detail photos together</span>
+                    </div>
+                  </div>
+
+                  <!-- Angle Preview Thumbnails Grid -->
+                  <div id="anglesPreviewGrid" class="angles-preview-grid hidden"></div>
+                </div>
+
+              </div>
+
+            </div>
+
+            <!-- Form Action Footer -->
+            <div class="panel-footer">
+              <div id="uploadProgress" class="upload-progress-wrap hidden">
+                <div class="progress-bar-track">
+                  <div id="uploadProgressBar" class="progress-bar-fill"></div>
+                </div>
+                <span id="uploadProgressText" class="progress-text">Uploading outfit photos...</span>
+              </div>
+
+              <div class="footer-buttons">
+                <button type="reset" id="resetOutfitFormBtn" class="btn btn-secondary">
+                  <i class="fa-solid fa-rotate-left"></i> Reset Form
+                </button>
+                <button type="submit" id="submitOutfitBtn" class="btn btn-primary btn-lg">
+                  <i class="fa-solid fa-cloud-arrow-up"></i> Add Outfit to Catalogue
+                </button>
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+      <!-- TAB 2: MANAGE OUTFITS -->
+      <div id="manageOutfitsTab" class="tab-pane">
+        <div class="admin-panel">
+          <div class="panel-header flex-between">
+            <div>
+              <h3><i class="fa-solid fa-boxes-stacked text-gold"></i> Manage Inventory</h3>
+              <p class="panel-subtitle">View, search, or remove outfits currently active in the digital showroom.</p>
+            </div>
+            <div class="inventory-filters">
+              <input type="text" id="adminSearchInput" class="form-control form-control-sm" placeholder="Search by SKU, color...">
+              <select id="adminCategoryFilter" class="form-control form-control-sm">
+                <option value="all">All Categories</option>
+                <option value="rental-bridal">Bridal Wear</option>
+                <option value="female-partywear">Party Wear</option>
+                <option value="jewelry">Jewelry</option>
+                <option value="kids-rental">Girls Rental</option>
+                <option value="kids-coatpant">Boys Coat-Pants</option>
+                <option value="saree">Sarees</option>
+                <option value="purses">Clutches & Purses</option>
+                <option value="shoes">Footwear</option>
+                <option value="kids-sherwani">Boys Sherwani</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Outfits Table -->
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th style="width: 70px;">Photo</th>
+                  <th>SKU</th>
+                  <th>Category</th>
+                  <th>Color</th>
+                  <th>Size</th>
+                  <th>Rent</th>
+                  <th>Angles</th>
+                  <th style="width: 120px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminProductsTableBody">
+                <tr>
+                  <td colspan="8" class="text-center py-5">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Loading catalogue items...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="table-footer-bar">
+            <span id="tableCountSummary">Showing 0 outfits</span>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- =========================================================================
+       CONFIRMATION MODAL
+       ========================================================================= -->
+  <div id="confirmModal" class="admin-modal-overlay hidden">
+    <div class="admin-modal-box">
+      <div class="modal-header">
+        <h4><i class="fa-solid fa-triangle-exclamation text-warning"></i> Confirm Action</h4>
+      </div>
+      <div class="modal-body">
+        <p id="confirmModalMessage">Are you sure you want to delete this outfit?</p>
+      </div>
+      <div class="modal-actions">
+        <button id="confirmCancelBtn" class="btn btn-secondary">Cancel</button>
+        <button id="confirmProceedBtn" class="btn btn-danger">Delete Outfit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="adminToast" class="admin-toast hidden">
+    <i id="toastIcon" class="fa-solid fa-circle-check"></i>
+    <span id="adminToastMsg">Success</span>
+  </div>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>
