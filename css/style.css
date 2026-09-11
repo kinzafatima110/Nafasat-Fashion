@@ -1386,41 +1386,45 @@ body {
 }
 
 .admin-login-card {
-  background: #1e1e1e;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 16px;
-  padding: 36px 32px;
+  background: #1c1c1f;
+  border: 1px solid rgba(248, 200, 67, 0.35);
+  border-radius: 20px;
+  padding: 40px 36px;
   width: 100%;
   max-width: 440px;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(248, 200, 67, 0.08);
   text-align: center;
+  position: relative;
+  z-index: 10;
 }
 
 .login-icon-wrap {
   width: 64px;
   height: 64px;
-  background: rgba(248, 200, 67, 0.12);
-  border: 1px solid rgba(248, 200, 67, 0.3);
+  background: rgba(248, 200, 67, 0.15);
+  border: 1px solid rgba(248, 200, 67, 0.4);
   color: #F8C843;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.6rem;
-  margin: 0 auto 16px;
+  margin: 0 auto 18px;
 }
 
 .login-header h2 {
   font-family: 'Cinzel', serif;
-  font-size: 1.5rem;
-  color: #f5f5f5;
-  margin-bottom: 6px;
+  font-size: 1.6rem;
+  color: #ffffff;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
 }
 
 .login-header p {
-  color: #aaaaaa;
-  font-size: 0.88rem;
-  margin-bottom: 24px;
+  color: #c5c5c5;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 28px;
 }
 
 .login-footer {
@@ -2071,4 +2075,95 @@ body {
   align-items: center;
   gap: 8px;
 }
+
+/* ==========================================================================
+   GLOBAL UTILITIES & BUTTONS
+   ========================================================================== */
+.hidden {
+  display: none !important;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #F8C843 0%, #e5a910 100%);
+  color: #1a1a1a !important;
+  box-shadow: 0 4px 14px rgba(248, 200, 67, 0.28);
+  font-weight: 700;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ffcf4d 0%, #f0b515 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(248, 200, 67, 0.4);
+}
+
+.btn-secondary {
+  background: #2c2c30;
+  color: #dddddd !important;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #3a3a40;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: #ffffff !important;
+  border: 1px solid #bd2130;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #bd2130;
+}
+
+.btn-outline {
+  background: transparent;
+  color: #F8C843 !important;
+  border: 1px solid rgba(248, 200, 67, 0.5);
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: rgba(248, 200, 67, 0.15);
+  border-color: #F8C843;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+
+.btn-lg {
+  padding: 12px 24px;
+  font-size: 1rem;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
 
