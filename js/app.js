@@ -1,86 +1,85 @@
 /**
- * NAFASAT FASHION - THE STORE FOR RENTAL DRESSES AND ACCESSORIES
- * Digital Showroom Application
+ * NAFASAT FASHION & RENTALS - Digital Showroom Client Engine
+ * Luxury boutique catalogue with mannequin dummy framing, live filtering,
+ * customer Try-On tray, and multi-angle lightbox.
  */
 
 (function() {
   'use strict';
 
-  // State
+  // Application State
   let catalogData = { categories: [], products: [], available_colors: [], available_sizes: [] };
+  let allProducts = [];
   let filteredProducts = [];
   let currentCategory = 'all';
   let currentColor = 'all';
   let currentSize = 'all';
-  let currentSearchQuery = '';
+  let currentSearch = '';
   let currentSort = 'code-asc';
-  
-  // Lightbox Modal State
   let activeProduct = null;
-  let activePhotoIndex = 0;
 
-  // Try-On List (Local Storage)
-  const STORAGE_KEY = 'nafasat_tryon_list_v2';
-  let tryOnList = loadTryOnList();
+  // LocalStorage Try-On Tray State
+  const STORAGE_KEY = 'nafasat_tryon_tray_v3';
+  const WISHLIST_KEY = 'nafasat_wishlist_v3';
+  let tryOnItems = loadFromStorage(STORAGE_KEY, []);
+  let wishlistItems = loadFromStorage(WISHLIST_KEY, []);
 
-  // DOM Elements
-  const elements = {
-    productGrid: document.getElementById('productGrid'),
-    loadingState: document.getElementById('loadingState'),
-    emptyState: document.getElementById('emptyState'),
-    resetFilterBtn: document.getElementById('resetFilterBtn'),
-    categoryPills: document.getElementById('categoryPills'),
-    countAll: document.getElementById('count-all'),
-    searchInput: document.getElementById('searchInput'),
+  // DOM Elements Cache
+  const dom = {
+    // Search & Inputs
+    itemSearchInput: document.getElementById('itemSearchInput'),
+    headerSearchInput: document.getElementById('headerSearchInput'),
     clearSearchBtn: document.getElementById('clearSearchBtn'),
-    resultsCount: document.getElementById('resultsCount'),
-    activeFiltersSummary: document.getElementById('activeFiltersSummary'),
-    activeTagsRow: document.getElementById('activeTagsRow'),
-    colorSelect: document.getElementById('colorSelect'),
-    sizeSelect: document.getElementById('sizeSelect'),
-    sortSelect: document.getElementById('sortSelect'),
+    colorFilter: document.getElementById('colorFilter'),
+    sizeFilter: document.getElementById('sizeFilter'),
+    sortFilter: document.getElementById('sortFilter'),
     
-    // Lightbox
-    lightboxModal: document.getElementById('lightboxModal'),
-    lightboxCloseBtn: document.getElementById('lightboxCloseBtn'),
-    lightboxMainImage: document.getElementById('lightboxMainImage'),
-    lightboxPrevBtn: document.getElementById('lightboxPrevBtn'),
-    lightboxNextBtn: document.getElementById('lightboxNextBtn'),
-    lightboxCategory: document.getElementById('lightboxCategory'),
-    lightboxSku: document.getElementById('lightboxSku'),
-    lightboxCounter: document.getElementById('lightboxCounter'),
-    lightboxColor: document.getElementById('lightboxColor'),
-    lightboxSize: document.getElementById('lightboxSize'),
-    lightboxRent: document.getElementById('lightboxRent'),
-    lightboxDeposit: document.getElementById('lightboxDeposit'),
-    lightboxDescription: document.getElementById('lightboxDescription'),
-    lightboxBadgeLabel: document.getElementById('lightboxBadgeLabel'),
-    lightboxThumbnails: document.getElementById('lightboxThumbnails'),
-    lightboxTryOnBtn: document.getElementById('lightboxTryOnBtn'),
-    lightboxWhatsAppBtn: document.getElementById('lightboxWhatsAppBtn'),
+    // Category Nav & Pills
+    categoryPills: document.querySelectorAll('.category-pill'),
+    headerNavBtns: document.querySelectorAll('.nav-cat-btn'),
+    footerNavBtns: document.querySelectorAll('.nav-footer-cat'),
+    currentCategoryName: document.getElementById('current-category-name'),
+    visibleCount: document.getElementById('visible-count'),
+    resetAllFiltersBtn: document.getElementById('resetAllFiltersBtn'),
+    emptyStateResetBtn: document.getElementById('emptyStateResetBtn'),
 
-    // Try-On Drawer
-    tryOnDrawer: document.getElementById('tryOnDrawer'),
-    tryOnDrawerBtn: document.getElementById('tryOnDrawerBtn'),
-    drawerCloseBtn: document.getElementById('drawerCloseBtn'),
-    drawerOverlay: document.getElementById('drawerOverlay'),
-    drawerItemsList: document.getElementById('drawerItemsList'),
-    drawerEmptyState: document.getElementById('drawerEmptyState'),
-    tryOnCountBadge: document.getElementById('tryOnCountBadge'),
-    drawerCount: document.getElementById('drawerCount'),
-    whatsappShareListBtn: document.getElementById('whatsappShareListBtn'),
-    printListBtn: document.getElementById('printListBtn'),
-    clearTryOnListBtn: document.getElementById('clearTryOnListBtn'),
+    // Grid Containers
+    catalogGrid: document.getElementById('catalogGrid'),
+    loadingState: document.getElementById('loadingState'),
+    noResultsState: document.getElementById('noResultsState'),
+
+    // Try-On Floating Tray
+    floatingTryOnTray: document.getElementById('floatingTryOnTray'),
+    trayHeaderToggle: document.getElementById('trayHeaderToggle'),
+    trayExpandedContent: document.getElementById('trayExpandedContent'),
+    trayChevron: document.getElementById('trayChevron'),
+    trayBadgeCount: document.getElementById('trayBadgeCount'),
+    bannerCount: document.getElementById('bannerCount'),
+    headerTryOnCount: document.getElementById('headerTryOnCount'),
+    trayItemsList: document.getElementById('trayItemsList'),
+    clearTrayListBtn: document.getElementById('clearTrayListBtn'),
+    dispatchFittingRoomBtn: document.getElementById('dispatchFittingRoomBtn'),
+    sendWhatsappBtn: document.getElementById('sendWhatsappBtn'),
+    quickTryOnToggle: document.getElementById('quick-tryon-toggle'),
+    headerTryOnBtn: document.getElementById('headerTryOnBtn'),
+
+    // Angles Modal
+    anglesModal: document.getElementById('anglesModal'),
+    closeAnglesModal: document.getElementById('closeAnglesModal'),
+    modalSkuCode: document.getElementById('modalSkuCode'),
+    modalTitle: document.getElementById('modalTitle'),
+    modalAnglesGrid: document.getElementById('modalAnglesGrid'),
+    modalRateDetails: document.getElementById('modalRateDetails'),
+    modalAddTryOn: document.getElementById('modalAddTryOn'),
+    modalWhatsappInquire: document.getElementById('modalWhatsappInquire'),
 
     // Toast
-    toast: document.getElementById('toast'),
-    toastMessage: document.getElementById('toastMessage')
+    toast: document.getElementById('toastNotification'),
+    toastMsg: document.getElementById('toastMessage')
   };
 
-  // =========================================================================
-  // COLOR PALETTE MAPPER FOR DOTS
-  // =========================================================================
-  function getColorHex(stdColor) {
+  // Color Swatch Helper
+  function getColorDot(color) {
     const map = {
       'Red & Maroon': '#b3001b',
       'Pink & Peach': '#ff758f',
@@ -92,15 +91,54 @@
       'Purple & Plum': '#7209b7',
       'Multi & Other': '#f77f00'
     };
-    return map[stdColor] || '#999999';
+    return map[color] || '#888888';
   }
 
-  function formatPrice(val) {
+  // Price Formatter
+  function formatRent(val) {
     if (!val) return 'Inquire for Rent';
-    // Clean string, e.g. "3000" -> "Rs. 3,000"
-    const num = parseInt(String(val).replace(/[^0-9]/g, ''), 10);
-    if (isNaN(num) || num <= 0) return 'Inquire for Rent';
+    const num = Number(String(val).replace(/[^0-9]/g, ''));
+    if (!num || isNaN(num)) return 'Inquire for Rent';
     return `Rs. ${num.toLocaleString()}`;
+  }
+
+  function formatDeposit(val) {
+    if (!val) return 'Standard Deposit';
+    const num = Number(String(val).replace(/[^0-9]/g, ''));
+    if (!num || isNaN(num)) return 'Standard Deposit';
+    return `Rs. ${num.toLocaleString()} (Refundable)`;
+  }
+
+  // Storage Helpers
+  function loadFromStorage(key, fallback) {
+    try {
+      const data = localStorage.getItem(key);
+      return data ? JSON.parse(data) : fallback;
+    } catch (_) {
+      return fallback;
+    }
+  }
+
+  function saveToStorage(key, val) {
+    try {
+      localStorage.setItem(key, JSON.stringify(val));
+    } catch (_) {}
+  }
+
+  // Toast Notification
+  let toastTimer = null;
+  function showToast(text) {
+    if (!dom.toast || !dom.toastMsg) return;
+    if (toastTimer) clearTimeout(toastTimer);
+
+    dom.toastMsg.textContent = text;
+    dom.toast.classList.remove('translate-y-16', 'opacity-0', 'pointer-events-none');
+    dom.toast.classList.add('translate-y-0', 'opacity-100');
+
+    toastTimer = setTimeout(() => {
+      dom.toast.classList.add('translate-y-16', 'opacity-0', 'pointer-events-none');
+      dom.toast.classList.remove('translate-y-0', 'opacity-100');
+    }, 2500);
   }
 
   // =========================================================================
@@ -108,805 +146,669 @@
   // =========================================================================
   async function init() {
     setupEventListeners();
-    updateTryOnBadges();
-    
-    try {
-      const response = await fetch('data/products.json');
-      if (!response.ok) {
-        throw new Error(`HTTP Error: ${response.status}`);
-      }
-      catalogData = await response.json();
-      
-      // Populate Dropdowns
-      populateFilterDropdowns();
+    updateTrayUI();
 
-      // Render Category Nav
-      renderCategoryPills();
-      
-      // Initial Filter & Render
+    try {
+      const res = await fetch('data/products.json');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      catalogData = await res.json();
+      allProducts = catalogData.products || [];
+
+      // Populate filter dropdowns
+      populateDropdowns();
+
+      // Update category pill count numbers
+      updateCategoryCounts();
+
+      // Render cards
       applyFiltersAndSort();
-    } catch (error) {
-      console.error('Failed to load catalog data:', error);
-      elements.loadingState.innerHTML = `
-        <i class="fa-solid fa-triangle-exclamation empty-icon" style="color: #d90429;"></i>
-        <h3>Unable to load catalogue</h3>
-        <p>Please check your connection or reload the page.</p>
-      `;
+
+      // Reveal grid
+      if (dom.loadingState) dom.loadingState.classList.add('hidden');
+      if (dom.catalogGrid) dom.catalogGrid.classList.remove('hidden');
+
+    } catch (err) {
+      console.error('Failed to load catalogue data:', err);
+      if (dom.loadingState) {
+        dom.loadingState.innerHTML = `
+          <span class="material-symbols-outlined text-[44px] text-red-600 mb-2">warning</span>
+          <h3 class="font-headline-sm text-on-surface font-semibold">Unable to load catalogue</h3>
+          <p class="font-body-sm text-on-surface-variant mt-1">Please reload the page or check your connection.</p>
+        `;
+      }
     }
   }
 
   // =========================================================================
-  // POPULATE COLOR & SIZE DROPDOWNS
+  // DROPDOWNS POPULATION
   // =========================================================================
-  function populateFilterDropdowns() {
+  function populateDropdowns() {
     // Populate Colors
-    elements.colorSelect.innerHTML = '<option value="all">All Colors</option>';
-    if (catalogData.available_colors) {
-      catalogData.available_colors.forEach(col => {
+    if (dom.colorFilter) {
+      dom.colorFilter.innerHTML = '<option value="all">Color: All</option>';
+      const colors = catalogData.available_colors || [
+        "Red & Maroon", "Pink & Peach", "Blue & Ferozi", "Green & Emerald",
+        "Gold & Yellow", "White & Silver", "Black", "Purple & Plum", "Multi & Other"
+      ];
+      colors.forEach(col => {
         const opt = document.createElement('option');
         opt.value = col;
         opt.textContent = col;
-        elements.colorSelect.appendChild(opt);
+        dom.colorFilter.appendChild(opt);
       });
     }
 
     // Populate Sizes
-    elements.sizeSelect.innerHTML = '<option value="all">All Sizes</option>';
-    if (catalogData.available_sizes) {
-      catalogData.available_sizes.forEach(sz => {
+    if (dom.sizeFilter) {
+      dom.sizeFilter.innerHTML = '<option value="all">Size: All</option>';
+      const sizes = catalogData.available_sizes || [
+        "XS", "Small", "Medium", "Large", "XL", "Kids", "Free Size"
+      ];
+      sizes.forEach(sz => {
         const opt = document.createElement('option');
         opt.value = sz;
         opt.textContent = sz;
-        elements.sizeSelect.appendChild(opt);
+        dom.sizeFilter.appendChild(opt);
       });
     }
   }
 
-  // =========================================================================
-  // CATEGORIES RENDERING
-  // =========================================================================
-  function renderCategoryPills() {
-    elements.countAll.textContent = catalogData.products.length;
-    
-    catalogData.categories.forEach(cat => {
-      if (cat.count <= 0) return;
-      
-      const btn = document.createElement('button');
-      btn.className = 'cat-pill';
-      btn.dataset.category = cat.id;
-      
-      let icon = 'fa-tag';
-      if (cat.id.includes('bridal')) icon = 'fa-gem';
-      else if (cat.id.includes('party')) icon = 'fa-wand-magic-sparkles';
-      else if (cat.id.includes('jewelry')) icon = 'fa-ring';
-      else if (cat.id.includes('kids') || cat.id.includes('coat')) icon = 'fa-child';
-      else if (cat.id.includes('saree')) icon = 'fa-shirt';
-      else if (cat.id.includes('purse')) icon = 'fa-bag-shopping';
-      else if (cat.id.includes('shoe')) icon = 'fa-shoe-prints';
-      
-      btn.innerHTML = `
-        <span><i class="fa-solid ${icon}"></i> ${escapeHtml(cat.name)}</span>
-        <span class="pill-count">${cat.count}</span>
-      `;
-      
-      btn.addEventListener('click', () => {
-        setCategory(cat.id);
-      });
-      
-      elements.categoryPills.appendChild(btn);
+  function updateCategoryCounts() {
+    const counts = { all: allProducts.length };
+    allProducts.forEach(p => {
+      counts[p.category_id] = (counts[p.category_id] || 0) + 1;
+    });
+
+    Object.keys(counts).forEach(catId => {
+      const el = document.getElementById(`count-${catId}`);
+      if (el) el.textContent = counts[catId];
     });
   }
 
-  function setCategory(catId) {
-    currentCategory = catId;
-    
-    const allPills = elements.categoryPills.querySelectorAll('.cat-pill');
-    allPills.forEach(pill => {
-      if (pill.dataset.category === catId) {
-        pill.classList.add('active');
-        pill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-      } else {
-        pill.classList.remove('active');
-      }
-    });
-
-    applyFiltersAndSort();
-  }
-
   // =========================================================================
-  // FILTERING & SORTING (CATEGORY, COLOR, SIZE, SEARCH, SORT)
+  // FILTER & SORT ENGINE
   // =========================================================================
   function applyFiltersAndSort() {
-    let results = catalogData.products.slice();
+    const q = currentSearch.toLowerCase().trim();
 
-    // 1. Category
-    if (currentCategory !== 'all') {
-      results = results.filter(item => item.category_id === currentCategory);
-    }
+    filteredProducts = allProducts.filter(p => {
+      // Category check
+      if (currentCategory !== 'all' && p.category_id !== currentCategory) {
+        return false;
+      }
 
-    // 2. Color Filter
-    if (currentColor !== 'all') {
-      results = results.filter(item => item.standard_color === currentColor);
-    }
+      // Color check
+      if (currentColor !== 'all') {
+        const pStdCol = (p.standard_color || '').toLowerCase();
+        const pRawCol = (p.color || '').toLowerCase();
+        const targetCol = currentColor.toLowerCase();
+        if (pStdCol !== targetCol && !pRawCol.includes(targetCol)) {
+          return false;
+        }
+      }
 
-    // 3. Size Filter
-    if (currentSize !== 'all') {
-      results = results.filter(item => item.standard_size === currentSize);
-    }
+      // Size check
+      if (currentSize !== 'all') {
+        const pStdSz = (p.standard_size || '').toLowerCase();
+        const pRawSz = (p.size || '').toLowerCase();
+        const targetSz = currentSize.toLowerCase();
+        if (pStdSz !== targetSz && !pRawSz.includes(targetSz)) {
+          return false;
+        }
+      }
 
-    // 4. Search Query
-    const query = currentSearchQuery.trim().toLowerCase();
-    if (query) {
-      results = results.filter(item => {
-        return (
-          item.sku.toLowerCase().includes(query) ||
-          item.title.toLowerCase().includes(query) ||
-          item.color.toLowerCase().includes(query) ||
-          item.size.toLowerCase().includes(query) ||
-          item.category_name.toLowerCase().includes(query) ||
-          item.description.toLowerCase().includes(query) ||
-          (item.images && item.images.some(img => img.toLowerCase().includes(query)))
-        );
+      // Search query check
+      if (q) {
+        const matchSku = (p.sku || '').toLowerCase().includes(q);
+        const matchTitle = (p.title || '').toLowerCase().includes(q);
+        const matchCol = (p.color || '').toLowerCase().includes(q);
+        const matchDesc = (p.description || '').toLowerCase().includes(q);
+        const matchCat = (p.category_name || '').toLowerCase().includes(q);
+        if (!matchSku && !matchTitle && !matchCol && !matchDesc && !matchCat) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    // Sort
+    if (currentSort === 'rent-low') {
+      filteredProducts.sort((a, b) => {
+        const ra = Number(String(a.rent || 0).replace(/[^0-9]/g, '')) || 999999;
+        const rb = Number(String(b.rent || 0).replace(/[^0-9]/g, '')) || 999999;
+        return ra - rb;
       });
-    }
-
-    // 5. Sorting
-    if (currentSort === 'code-asc') {
-      results.sort((a, b) => a.sku.localeCompare(b.sku, undefined, { numeric: true, sensitivity: 'base' }));
+    } else if (currentSort === 'rent-high') {
+      filteredProducts.sort((a, b) => {
+        const ra = Number(String(a.rent || 0).replace(/[^0-9]/g, '')) || 0;
+        const rb = Number(String(b.rent || 0).replace(/[^0-9]/g, '')) || 0;
+        return rb - ra;
+      });
     } else if (currentSort === 'code-desc') {
-      results.sort((a, b) => b.sku.localeCompare(a.sku, undefined, { numeric: true, sensitivity: 'base' }));
-    } else if (currentSort === 'rent-asc') {
-      results.sort((a, b) => (parseInt(a.rent, 10) || 999999) - (parseInt(b.rent, 10) || 999999));
-    } else if (currentSort === 'rent-desc') {
-      results.sort((a, b) => (parseInt(b.rent, 10) || 0) - (parseInt(a.rent, 10) || 0));
-    } else if (currentSort === 'photos-desc') {
-      results.sort((a, b) => b.image_count - a.image_count);
+      filteredProducts.sort((a, b) => (b.sku || '').localeCompare(a.sku || ''));
+    } else {
+      // Default: code-asc
+      filteredProducts.sort((a, b) => (a.sku || '').localeCompare(b.sku || ''));
     }
 
-    filteredProducts = results;
-    updateStatusSummary();
-    renderProductGrid();
-  }
+    // Update Counter Ribbon
+    if (dom.visibleCount) dom.visibleCount.textContent = filteredProducts.length;
 
-  function updateStatusSummary() {
-    elements.resultsCount.textContent = filteredProducts.length;
-
-    let catName = 'All Collections';
-    if (currentCategory !== 'all') {
-      const found = catalogData.categories.find(c => c.id === currentCategory);
-      catName = found ? found.name : currentCategory;
-    }
-    elements.activeFiltersSummary.textContent = catName;
-
-    // Render active filter badges
-    elements.activeTagsRow.innerHTML = '';
-    let hasFilters = false;
-
-    if (currentColor !== 'all') {
-      hasFilters = true;
-      const tag = document.createElement('span');
-      tag.className = 'filter-tag';
-      tag.innerHTML = `Color: ${escapeHtml(currentColor)} <i class="fa-solid fa-xmark tag-remove"></i>`;
-      tag.querySelector('.tag-remove').addEventListener('click', () => {
-        elements.colorSelect.value = 'all';
-        currentColor = 'all';
-        applyFiltersAndSort();
-      });
-      elements.activeTagsRow.appendChild(tag);
-    }
-
-    if (currentSize !== 'all') {
-      hasFilters = true;
-      const tag = document.createElement('span');
-      tag.className = 'filter-tag';
-      tag.innerHTML = `Size: ${escapeHtml(currentSize)} <i class="fa-solid fa-xmark tag-remove"></i>`;
-      tag.querySelector('.tag-remove').addEventListener('click', () => {
-        elements.sizeSelect.value = 'all';
-        currentSize = 'all';
-        applyFiltersAndSort();
-      });
-      elements.activeTagsRow.appendChild(tag);
-    }
-
-    if (currentSearchQuery) {
-      hasFilters = true;
-      const tag = document.createElement('span');
-      tag.className = 'filter-tag';
-      tag.innerHTML = `"${escapeHtml(currentSearchQuery)}" <i class="fa-solid fa-xmark tag-remove"></i>`;
-      tag.querySelector('.tag-remove').addEventListener('click', () => {
-        elements.searchInput.value = '';
-        currentSearchQuery = '';
-        elements.clearSearchBtn.style.display = 'none';
-        applyFiltersAndSort();
-      });
-      elements.activeTagsRow.appendChild(tag);
-    }
-
-    elements.activeTagsRow.style.display = hasFilters ? 'flex' : 'none';
+    // Render cards
+    renderProductCards(filteredProducts);
   }
 
   // =========================================================================
-  // PRODUCT GRID RENDERING (DUMMY PHOTO ON TOP)
+  // CARD RENDERER (Intelligent Dummy Anchoring)
   // =========================================================================
-  function renderProductGrid() {
-    elements.loadingState.style.display = 'none';
+  function renderProductCards(products) {
+    const grid = dom.catalogGrid;
+    if (!grid) return;
 
-    if (filteredProducts.length === 0) {
-      elements.productGrid.innerHTML = '';
-      elements.emptyState.style.display = 'block';
+    if (products.length === 0) {
+      grid.innerHTML = '';
+      if (dom.noResultsState) dom.noResultsState.classList.remove('hidden');
       return;
     }
 
-    elements.emptyState.style.display = 'none';
-    const fragment = document.createDocumentFragment();
+    if (dom.noResultsState) dom.noResultsState.classList.add('hidden');
 
-    filteredProducts.forEach(product => {
-      const isFav = isFavorited(product.sku);
-      
-      const card = document.createElement('div');
-      card.className = 'product-card';
-      card.dataset.sku = product.sku;
+    // Render cards (virtualized to first 80 for instantaneous DOM performance)
+    const cardsToRender = products.slice(0, 100);
 
-      const hasPrice = product.rent && parseInt(product.rent, 10) > 0;
-      const rentDisplay = hasPrice ? `Rs. ${parseInt(product.rent, 10).toLocaleString()}` : 'Inquire';
-      const depositDisplay = product.deposit ? `Dep: Rs. ${parseInt(product.deposit, 10).toLocaleString()}` : '';
+    const cardsHtml = cardsToRender.map(p => {
+      const isWishlisted = wishlistItems.includes(p.sku);
+      const anglesCount = p.images ? p.images.length : 1;
+      const primaryImg = p.primary_image || (p.images && p.images[0]) || 'assets/logo.png';
+      const rentText = formatRent(p.rent);
+      const depositText = formatDeposit(p.deposit);
+      const colorDot = getColorDot(p.standard_color);
 
-      const colorDotHex = getColorHex(product.standard_color);
-      const photoText = product.image_count > 1 ? `${product.image_count} Angles` : '1 Photo';
+      return `
+        <article class="garment-card group bg-surface-card rounded-xl overflow-hidden shadow-[0_4px_20px_-2px_rgba(31,36,33,0.04)] hover:shadow-md transition-all duration-300 flex flex-col border border-border-hairline" data-sku="${p.sku}">
+          
+          <!-- Top Media Stage: Tall 3/4 with Dummy anchored to top -->
+          <div class="relative w-full aspect-[3/4] bg-surface-container-high overflow-hidden cursor-pointer open-angles-trigger" data-sku="${p.sku}">
+            <img class="w-full h-full card-dummy-img group-hover:scale-105 transition-transform duration-500" 
+                 src="${primaryImg}" 
+                 alt="${p.title}" 
+                 loading="lazy" 
+                 onerror="this.src='assets/logo.png'"/>
+            
+            <!-- Top Badges -->
+            <div class="absolute top-3 left-3 flex flex-col gap-1.5 items-start">
+              <span class="font-label-code text-label-code bg-on-background/90 backdrop-blur-sm text-on-primary px-2 py-0.5 rounded-full uppercase tracking-wider">
+                ${p.sku}
+              </span>
+              <span class="inline-flex items-center gap-1 font-label-code text-label-code bg-brand-gold-deep/90 backdrop-blur-sm text-on-primary px-2 py-0.5 rounded-full">
+                <span class="material-symbols-outlined text-[12px]">accessibility_new</span> Mannequin
+              </span>
+            </div>
 
-      card.innerHTML = `
-        <div class="card-image-wrap" role="button" tabindex="0" aria-label="View ${escapeHtml(product.sku)}">
-          <img 
-            src="${escapeHtml(product.primary_image)}" 
-            alt="Dummy view for ${escapeHtml(product.sku)}" 
-            class="card-img" 
-            loading="lazy"
-            onerror="this.src='data:image/svg+xml;charset=UTF-8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'300\\' height=\\'450\\' viewBox=\\'0 0 300 450\\'><rect fill=\\'%23eee\\' width=\\'300\\' height=\\'450\\'/><text fill=\\'%23aaa\\' font-family=\\'sans-serif\\' font-size=\\'16\\' x=\\'50%\\' y=\\'50%\\' text-anchor=\\'middle\\'>Photo Unavailable</text></svg>'"
-          >
-          <span class="dummy-badge">
-            <i class="fa-solid fa-vest-patches"></i> Mannequin
-          </span>
-          <span class="photo-count-pill">
-            <i class="fa-solid fa-camera"></i> ${photoText}
-          </span>
-          <button class="card-favorite-btn ${isFav ? 'favorited' : ''}" title="${isFav ? 'Remove from Try-On' : 'Add to Try-On'}">
-            <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
-          </button>
-        </div>
+            <!-- Top Right Heart Wishlist Button -->
+            <div class="absolute top-3 right-3 flex items-center gap-1.5">
+              <button class="wishlist-btn w-8 h-8 rounded-full bg-surface-card/90 backdrop-blur-sm text-on-surface flex items-center justify-center hover:bg-surface-card hover:text-brand-coral transition-colors" data-sku="${p.sku}" title="Save to Favorites">
+                <span class="material-symbols-outlined text-[18px] ${isWishlisted ? 'text-brand-coral' : ''}" style="${isWishlisted ? "font-variation-settings: 'FILL' 1;" : ''}">favorite</span>
+              </button>
+            </div>
 
-        <div class="card-body">
-          <div class="card-meta-top">
-            <span class="card-category">${escapeHtml(product.category_name)}</span>
+            <!-- Bottom Image Overlay: Photo Count -->
+            <div class="absolute bottom-2.5 right-3">
+              <span class="font-label-code text-label-code bg-black/60 backdrop-blur-sm text-white px-2 py-0.5 rounded-full flex items-center gap-1">
+                <span class="material-symbols-outlined text-[12px]">photo_camera</span> 1 of ${anglesCount} Angles
+              </span>
+            </div>
           </div>
 
-          <h3 class="card-sku">${escapeHtml(product.sku)}</h3>
+          <!-- Card Body Details -->
+          <div class="p-4 flex flex-col flex-grow justify-between gap-3">
+            <div>
+              <div class="flex items-center justify-between text-on-surface-variant font-label-code text-label-code uppercase tracking-wider mb-1">
+                <span>${p.category_name || 'Boutique Collection'}</span>
+                <span class="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-medium">Available for Rent</span>
+              </div>
+              
+              <h3 class="font-headline-sm text-[16px] leading-snug text-on-surface font-semibold line-clamp-1 group-hover:text-primary transition-colors cursor-pointer open-angles-trigger" data-sku="${p.sku}">
+                ${p.title}
+              </h3>
+              
+              <div class="flex items-center gap-2 mt-1.5 text-on-surface-variant font-body-sm text-body-sm">
+                <span class="flex items-center gap-1 text-[12px]">
+                  <span class="material-symbols-outlined text-[14px]">straighten</span> ${p.size || p.standard_size || 'Free Size'}
+                </span>
+                <span>•</span>
+                <span class="flex items-center gap-1 text-[12px]">
+                  <span class="inline-block w-2.5 h-2.5 rounded-full" style="background-color: ${colorDot};"></span>
+                  ${p.color || p.standard_color || 'Standard'}
+                </span>
+              </div>
+            </div>
 
-          <div class="card-tags-row">
-            <span class="tag-badge" title="Color: ${escapeHtml(product.color)}">
-              <span class="color-dot" style="background-color: ${colorDotHex};"></span>
-              ${escapeHtml(product.standard_color !== 'Standard' ? product.standard_color : product.color)}
-            </span>
-            <span class="tag-badge" title="Size: ${escapeHtml(product.size)}">
-              <i class="fa-solid fa-ruler" style="font-size:0.65rem; color:#888;"></i>
-              ${escapeHtml(product.standard_size)}
-            </span>
+            <!-- Pricing Tier breakdown -->
+            <div class="bg-surface-container-low rounded-lg p-2.5 flex items-center justify-between">
+              <div>
+                <span class="block font-label-code text-[10px] text-on-surface-variant uppercase tracking-wider">Rental Rate</span>
+                <div class="flex items-baseline gap-1">
+                  <span class="font-headline-sm text-headline-sm text-primary font-bold">${rentText}</span>
+                  <span class="font-body-sm text-body-sm text-on-surface-variant">/ 3 Days</span>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="block font-label-code text-[10px] text-on-surface-variant uppercase tracking-wider">Security Deposit</span>
+                <span class="font-label-md text-label-md text-on-surface font-medium">${depositText}</span>
+              </div>
+            </div>
+
+            <!-- CTA Action Buttons -->
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button class="view-angles-btn flex items-center justify-center gap-1 py-2 px-2.5 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high font-label-md text-label-md transition-colors" data-sku="${p.sku}">
+                <span class="material-symbols-outlined text-[16px]">visibility</span>
+                <span>Angles (${anglesCount})</span>
+              </button>
+              
+              <button class="add-tryon-btn flex items-center justify-center gap-1 py-2 px-2.5 rounded-lg bg-primary text-on-primary hover:bg-on-primary-container font-label-md text-label-md shadow-sm transition-all" data-sku="${p.sku}">
+                <span class="material-symbols-outlined text-[16px]">styler</span>
+                <span>+ Try-On</span>
+              </button>
+            </div>
+
           </div>
 
-          <div class="card-price-row">
-            <div class="price-rent">Rent: <strong>${rentDisplay}</strong></div>
-            ${depositDisplay ? `<div class="price-deposit">${depositDisplay}</div>` : ''}
-          </div>
-
-          <button class="btn-card-view">
-            <i class="fa-regular fa-eye"></i> <span>View All Angles (${product.image_count})</span>
-          </button>
-        </div>
+        </article>
       `;
+    }).join('');
 
-      // Click Events
-      const imageWrap = card.querySelector('.card-image-wrap');
-      const viewBtn = card.querySelector('.btn-card-view');
-      const favBtn = card.querySelector('.card-favorite-btn');
+    grid.innerHTML = cardsHtml;
+    attachCardListeners();
+  }
 
-      const openModal = (e) => {
-        if (e.target.closest('.card-favorite-btn')) return;
-        openLightbox(product, 0); // 0 is always the dummy image!
-      };
-
-      imageWrap.addEventListener('click', openModal);
-      imageWrap.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          openModal(e);
-        }
-      });
-      viewBtn.addEventListener('click', openModal);
-
-      favBtn.addEventListener('click', (e) => {
+  // =========================================================================
+  // CARD EVENT LISTENERS
+  // =========================================================================
+  function attachCardListeners() {
+    // Open Angles Trigger (Image click or title click or button click)
+    document.querySelectorAll('.open-angles-trigger, .view-angles-btn').forEach(el => {
+      el.addEventListener('click', (e) => {
         e.stopPropagation();
-        toggleFavorite(product);
+        const sku = el.getAttribute('data-sku');
+        openAnglesModal(sku);
       });
-
-      fragment.appendChild(card);
     });
 
-    elements.productGrid.innerHTML = '';
-    elements.productGrid.appendChild(fragment);
+    // Add to Try-On Button
+    document.querySelectorAll('.add-tryon-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const sku = btn.getAttribute('data-sku');
+        addToTryOn(sku);
+      });
+    });
+
+    // Wishlist Toggle
+    document.querySelectorAll('.wishlist-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const sku = btn.getAttribute('data-sku');
+        toggleWishlist(sku, btn);
+      });
+    });
   }
 
   // =========================================================================
-  // LIGHTBOX MODAL (DUMMY + OTHER ANGLES CAROUSEL)
+  // TRY-ON TRAY LOGIC
   // =========================================================================
-  function openLightbox(product, photoIndex = 0) {
+  function addToTryOn(sku) {
+    const product = allProducts.find(p => p.sku === sku);
+    if (!product) return;
+
+    const existingIdx = tryOnItems.findIndex(item => item.sku === sku);
+    if (existingIdx === -1) {
+      tryOnItems.push({
+        sku: product.sku,
+        title: product.title,
+        rent: formatRent(product.rent),
+        image: product.primary_image || (product.images && product.images[0]) || 'assets/logo.png',
+        category: product.category_name || 'Outfit'
+      });
+      saveToStorage(STORAGE_KEY, tryOnItems);
+      updateTrayUI();
+      showToast(`✨ Added "${product.sku}" to Fitting Tray`);
+      
+      // Auto expand tray on first add
+      if (dom.trayExpandedContent && dom.trayExpandedContent.classList.contains('hidden')) {
+        dom.trayExpandedContent.classList.remove('hidden');
+        if (dom.trayChevron) dom.trayChevron.textContent = 'expand_less';
+      }
+    } else {
+      showToast(`"${product.sku}" is already in your Tray`);
+    }
+  }
+
+  function removeFromTryOn(sku) {
+    tryOnItems = tryOnItems.filter(item => item.sku !== sku);
+    saveToStorage(STORAGE_KEY, tryOnItems);
+    updateTrayUI();
+    showToast(`Removed from fitting tray`);
+  }
+
+  function updateTrayUI() {
+    const count = tryOnItems.length;
+    if (dom.trayBadgeCount) dom.trayBadgeCount.textContent = count;
+    if (dom.bannerCount) dom.bannerCount.textContent = count;
+    if (dom.headerTryOnCount) dom.headerTryOnCount.textContent = count;
+
+    if (!dom.trayItemsList) return;
+
+    if (count === 0) {
+      dom.trayItemsList.innerHTML = `
+        <div class="py-6 text-center text-on-surface-variant font-body-sm text-body-sm">
+          <span class="material-symbols-outlined text-[28px] text-on-surface-variant/50 mb-1 block">dresser</span>
+          Your Try-On tray is currently empty.<br>Tap <strong>+ Try-On</strong> on any dress to request it for fitting.
+        </div>
+      `;
+      return;
+    }
+
+    dom.trayItemsList.innerHTML = tryOnItems.map(item => `
+      <div class="tray-item flex items-center justify-between pt-2 first:pt-0" data-sku="${item.sku}">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-12 bg-surface-container-high rounded overflow-hidden shrink-0">
+            <img class="w-full h-full object-cover card-dummy-img" src="${item.image}" alt="${item.sku}" onerror="this.src='assets/logo.png'"/>
+          </div>
+          <div class="flex flex-col">
+            <span class="font-label-md text-label-md text-on-surface font-semibold line-clamp-1">${item.title}</span>
+            <span class="font-label-code text-[10px] text-on-surface-variant uppercase">${item.sku} • ${item.rent}</span>
+          </div>
+        </div>
+        <button class="remove-tray-item text-on-surface-variant hover:text-brand-coral p-1 transition-colors" data-sku="${item.sku}" title="Remove">
+          <span class="material-symbols-outlined text-[16px]">close</span>
+        </button>
+      </div>
+    `).join('');
+
+    // Wire remove buttons
+    dom.trayItemsList.querySelectorAll('.remove-tray-item').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const sku = btn.getAttribute('data-sku');
+        removeFromTryOn(sku);
+      });
+    });
+  }
+
+  // =========================================================================
+  // WISHLIST TOGGLE
+  // =========================================================================
+  function toggleWishlist(sku, btnEl) {
+    const icon = btnEl.querySelector('.material-symbols-outlined');
+    const idx = wishlistItems.indexOf(sku);
+
+    if (idx === -1) {
+      wishlistItems.push(sku);
+      saveToStorage(WISHLIST_KEY, wishlistItems);
+      if (icon) {
+        icon.classList.add('text-brand-coral');
+        icon.style.fontVariationSettings = "'FILL' 1";
+      }
+      showToast(`Saved ${sku} to personal favorites`);
+    } else {
+      wishlistItems.splice(idx, 1);
+      saveToStorage(WISHLIST_KEY, wishlistItems);
+      if (icon) {
+        icon.classList.remove('text-brand-coral');
+        icon.style.fontVariationSettings = "'FILL' 0";
+      }
+      showToast(`Removed from favorites`);
+    }
+  }
+
+  // =========================================================================
+  // MULTI-ANGLE MODAL / LIGHTBOX
+  // =========================================================================
+  function openAnglesModal(sku) {
+    const product = allProducts.find(p => p.sku === sku);
+    if (!product) return;
     activeProduct = product;
-    activePhotoIndex = photoIndex;
 
-    elements.lightboxCategory.textContent = product.category_name;
-    elements.lightboxSku.textContent = product.sku;
-
-    // Metadata
-    elements.lightboxColor.innerHTML = `<i class="fa-solid fa-palette"></i> Color: <strong>${escapeHtml(product.color)}</strong>`;
-    elements.lightboxSize.innerHTML = `<i class="fa-solid fa-ruler"></i> Size: <strong>${escapeHtml(product.size)}</strong>`;
-    
-    if (product.rent && parseInt(product.rent, 10) > 0) {
-      elements.lightboxRent.style.display = 'inline-flex';
-      elements.lightboxRent.innerHTML = `<i class="fa-solid fa-tag"></i> Rent: <strong>Rs. ${parseInt(product.rent, 10).toLocaleString()}</strong>`;
-    } else {
-      elements.lightboxRent.style.display = 'none';
+    if (dom.modalSkuCode) dom.modalSkuCode.textContent = product.sku;
+    if (dom.modalTitle) dom.modalTitle.textContent = product.title;
+    if (dom.modalRateDetails) {
+      dom.modalRateDetails.textContent = `Rental: ${formatRent(product.rent)} / 3 Days • Deposit: ${formatDeposit(product.deposit)}`;
     }
 
-    if (product.deposit && parseInt(product.deposit, 10) > 0) {
-      elements.lightboxDeposit.style.display = 'inline-flex';
-      elements.lightboxDeposit.innerHTML = `<i class="fa-solid fa-shield-halved"></i> Deposit: <strong>Rs. ${parseInt(product.deposit, 10).toLocaleString()}</strong>`;
-    } else {
-      elements.lightboxDeposit.style.display = 'none';
+    // Set WhatsApp link
+    if (dom.modalWhatsappInquire) {
+      const msg = encodeURIComponent(`Hello Nafasat, I am interested in renting ${product.sku} (${product.title}). Rental: ${formatRent(product.rent)}.`);
+      dom.modalWhatsappInquire.href = `https://wa.me/923000000000?text=${msg}`;
     }
 
-    elements.lightboxDescription.textContent = product.description && product.description !== 'Rental dress / accessory at Nafasat.' ? product.description : '';
+    // Populate images grid
+    if (dom.modalAnglesGrid) {
+      const images = (product.images && product.images.length > 0) ? product.images : [product.primary_image || 'assets/logo.png'];
+      
+      dom.modalAnglesGrid.innerHTML = images.map((imgUrl, index) => {
+        const label = index === 0 ? 'Primary Mannequin' : `Angle ${index + 1}`;
+        return `
+          <div class="aspect-[3/4] bg-surface-container rounded-lg overflow-hidden relative border border-border-hairline shadow-sm">
+            <img class="w-full h-full object-cover card-dummy-img" src="${imgUrl}" alt="${product.sku} Angle ${index + 1}" loading="lazy" onerror="this.src='assets/logo.png'"/>
+            <span class="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm text-white text-xs px-2.5 py-0.5 rounded-full font-label-code flex items-center gap-1">
+              <span class="material-symbols-outlined text-[12px]">camera</span> ${label}
+            </span>
+          </div>
+        `;
+      }).join('');
+    }
 
-    // Render Thumbnails
-    renderLightboxThumbnails();
-
-    // Display Active Photo
-    updateLightboxImage();
-
-    // Update Try-On Button in Modal
-    updateLightboxTryOnBtn();
-
-    // WhatsApp Inquiry Link with prefilled SKU, Color, Size, and Rent
-    let waMsg = `Hello Nafasat, I am inquiring about Item Code: *${product.sku}* (${product.category_name}).\n`;
-    if (product.color && product.color !== 'Standard') waMsg += `Color: ${product.color}\n`;
-    if (product.size && product.size !== 'Standard') waMsg += `Size: ${product.size}\n`;
-    if (product.rent) waMsg += `Rent: Rs. ${product.rent}\n`;
-    waMsg += `Please let me know if it is available for booking!`;
-
-    elements.lightboxWhatsAppBtn.href = `https://wa.me/?text=${encodeURIComponent(waMsg)}`;
-
-    // Show Modal
-    elements.lightboxModal.classList.add('active');
-    elements.lightboxModal.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
+    if (dom.anglesModal) dom.anglesModal.classList.remove('hidden');
   }
 
-  function closeLightbox() {
-    elements.lightboxModal.classList.remove('active');
-    elements.lightboxModal.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
+  function closeAnglesModal() {
+    if (dom.anglesModal) dom.anglesModal.classList.add('hidden');
     activeProduct = null;
   }
 
-  function updateLightboxImage() {
-    if (!activeProduct || !activeProduct.images.length) return;
-
-    const currentSrc = activeProduct.images[activePhotoIndex];
-    elements.lightboxMainImage.style.opacity = '0';
-    
-    setTimeout(() => {
-      elements.lightboxMainImage.src = currentSrc;
-      elements.lightboxMainImage.style.opacity = '1';
-    }, 120);
-
-    // Label: Mannequin / Dummy vs Detail Angle
-    if (activePhotoIndex === 0) {
-      elements.lightboxBadgeLabel.textContent = 'Mannequin (Front View)';
-    } else {
-      elements.lightboxBadgeLabel.textContent = `Angle / Detail ${activePhotoIndex + 1} of ${activeProduct.images.length}`;
-    }
-
-    elements.lightboxCounter.textContent = `Photo ${activePhotoIndex + 1} of ${activeProduct.images.length}`;
-
-    // Highlight active thumbnail
-    const thumbs = elements.lightboxThumbnails.querySelectorAll('.thumb-item');
-    thumbs.forEach((t, i) => {
-      if (i === activePhotoIndex) {
-        t.classList.add('active');
-        t.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-      } else {
-        t.classList.remove('active');
-      }
-    });
-
-    const hasMultiple = activeProduct.images.length > 1;
-    elements.lightboxPrevBtn.style.display = hasMultiple ? 'flex' : 'none';
-    elements.lightboxNextBtn.style.display = hasMultiple ? 'flex' : 'none';
-  }
-
-  function renderLightboxThumbnails() {
-    elements.lightboxThumbnails.innerHTML = '';
-    if (!activeProduct || activeProduct.images.length <= 1) {
-      elements.lightboxThumbnails.style.display = 'none';
-      return;
-    }
-
-    elements.lightboxThumbnails.style.display = 'flex';
-
-    activeProduct.images.forEach((imgSrc, index) => {
-      const thumb = document.createElement('div');
-      thumb.className = `thumb-item ${index === activePhotoIndex ? 'active' : ''}`;
-      
-      thumb.innerHTML = `
-        <img src="${escapeHtml(imgSrc)}" alt="Angle ${index + 1}">
-        ${index === 0 ? '<span class="thumb-dummy-tag">Dummy</span>' : ''}
-      `;
-      
-      thumb.addEventListener('click', () => {
-        activePhotoIndex = index;
-        updateLightboxImage();
-      });
-      elements.lightboxThumbnails.appendChild(thumb);
-    });
-  }
-
-  function prevPhoto() {
-    if (!activeProduct || activeProduct.images.length <= 1) return;
-    activePhotoIndex = (activePhotoIndex - 1 + activeProduct.images.length) % activeProduct.images.length;
-    updateLightboxImage();
-  }
-
-  function nextPhoto() {
-    if (!activeProduct || activeProduct.images.length <= 1) return;
-    activePhotoIndex = (activePhotoIndex + 1) % activeProduct.images.length;
-    updateLightboxImage();
-  }
-
-  function updateLightboxTryOnBtn() {
-    if (!activeProduct) return;
-    const isFav = isFavorited(activeProduct.sku);
-    if (isFav) {
-      elements.lightboxTryOnBtn.classList.add('active');
-      elements.lightboxTryOnBtn.innerHTML = '<i class="fa-solid fa-heart"></i> In Try-On List';
-    } else {
-      elements.lightboxTryOnBtn.classList.remove('active');
-      elements.lightboxTryOnBtn.innerHTML = '<i class="fa-regular fa-heart"></i> Add to Try-On';
-    }
-  }
-
   // =========================================================================
-  // TRY-ON LIST / WISHLIST
-  // =========================================================================
-  function loadTryOnList() {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch (e) {
-      return [];
-    }
-  }
-
-  function saveTryOnList() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(tryOnList));
-    } catch (e) {
-      console.warn('Could not save to localStorage', e);
-    }
-    updateTryOnBadges();
-  }
-
-  function isFavorited(sku) {
-    return tryOnList.some(item => item.sku === sku);
-  }
-
-  function toggleFavorite(product) {
-    const index = tryOnList.findIndex(item => item.sku === product.sku);
-    if (index > -1) {
-      tryOnList.splice(index, 1);
-      showToast(`Removed ${product.sku} from Try-On List`);
-    } else {
-      tryOnList.push({
-        sku: product.sku,
-        title: product.title,
-        category_name: product.category_name,
-        category_id: product.category_id,
-        color: product.color,
-        size: product.size,
-        rent: product.rent,
-        primary_image: product.primary_image,
-        image_count: product.image_count,
-        addedAt: new Date().toISOString()
-      });
-      showToast(`Added ${product.sku} to Try-On List ❤️`);
-    }
-
-    saveTryOnList();
-    
-    // Update card button
-    const card = document.querySelector(`.product-card[data-sku="${product.sku}"]`);
-    if (card) {
-      const favBtn = card.querySelector('.card-favorite-btn');
-      const isFav = isFavorited(product.sku);
-      if (favBtn) {
-        favBtn.classList.toggle('favorited', isFav);
-        favBtn.innerHTML = `<i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-heart"></i>`;
-      }
-    }
-
-    if (activeProduct && activeProduct.sku === product.sku) {
-      updateLightboxTryOnBtn();
-    }
-
-    if (elements.tryOnDrawer.classList.contains('active')) {
-      renderDrawerItems();
-    }
-  }
-
-  function updateTryOnBadges() {
-    const count = tryOnList.length;
-    elements.tryOnCountBadge.textContent = count;
-    elements.drawerCount.textContent = count;
-  }
-
-  // =========================================================================
-  // TRY-ON DRAWER
-  // =========================================================================
-  function openDrawer() {
-    renderDrawerItems();
-    elements.tryOnDrawer.classList.add('active');
-    elements.tryOnDrawer.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeDrawer() {
-    elements.tryOnDrawer.classList.remove('active');
-    elements.tryOnDrawer.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
-  }
-
-  function renderDrawerItems() {
-    elements.drawerItemsList.innerHTML = '';
-    
-    if (tryOnList.length === 0) {
-      elements.drawerEmptyState.style.display = 'block';
-      elements.whatsappShareListBtn.disabled = true;
-      elements.whatsappShareListBtn.style.opacity = '0.5';
-      return;
-    }
-
-    elements.drawerEmptyState.style.display = 'none';
-    elements.whatsappShareListBtn.disabled = false;
-    elements.whatsappShareListBtn.style.opacity = '1';
-
-    tryOnList.forEach((item, index) => {
-      const row = document.createElement('div');
-      row.className = 'drawer-item';
-      
-      const rentText = item.rent ? `Rent: Rs. ${parseInt(item.rent, 10).toLocaleString()}` : '';
-      const metaText = [item.color !== 'Standard' ? item.color : '', item.size !== 'Standard' ? `Size: ${item.size}` : ''].filter(Boolean).join(' • ');
-
-      row.innerHTML = `
-        <img src="${escapeHtml(item.primary_image)}" alt="${escapeHtml(item.sku)}" class="drawer-item-img">
-        <div class="drawer-item-info">
-          <span class="drawer-item-cat">${escapeHtml(item.category_name)}</span>
-          <h4 class="drawer-item-sku">${escapeHtml(item.sku)}</h4>
-          ${metaText ? `<span class="drawer-item-details">${escapeHtml(metaText)}</span>` : ''}
-          ${rentText ? `<span class="drawer-item-rent">${rentText}</span>` : ''}
-        </div>
-        <button class="drawer-remove-btn" title="Remove item">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      `;
-
-      row.querySelector('.drawer-item-img').addEventListener('click', () => {
-        closeDrawer();
-        const found = catalogData.products.find(p => p.sku === item.sku);
-        if (found) openLightbox(found, 0);
-      });
-
-      row.querySelector('.drawer-remove-btn').addEventListener('click', () => {
-        const found = catalogData.products.find(p => p.sku === item.sku);
-        if (found) {
-          toggleFavorite(found);
-        } else {
-          tryOnList.splice(index, 1);
-          saveTryOnList();
-          renderDrawerItems();
-        }
-      });
-
-      elements.drawerItemsList.appendChild(row);
-    });
-  }
-
-  function sendListToWhatsApp() {
-    if (tryOnList.length === 0) return;
-
-    let message = `*Nafasat In-Store Fitting Request*\n`;
-    message += `Customer would like to try on the following ${tryOnList.length} item(s):\n\n`;
-    
-    tryOnList.forEach((item, i) => {
-      message += `${i + 1}. *${item.sku}* (${item.category_name})`;
-      if (item.color && item.color !== 'Standard') message += ` - Color: ${item.color}`;
-      if (item.size && item.size !== 'Standard') message += ` - Size: ${item.size}`;
-      if (item.rent) message += ` - Rent: Rs. ${item.rent}`;
-      message += `\n`;
-    });
-
-    message += `\nSent from Nafasat Digital Showroom.`;
-    const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
-  }
-
-  function printOrSaveList() {
-    if (tryOnList.length === 0) {
-      alert('Please add outfits to your Try-On List first.');
-      return;
-    }
-    window.print();
-  }
-
-  function clearTryOnList() {
-    if (tryOnList.length === 0) return;
-    if (confirm('Are you sure you want to clear your Try-On List?')) {
-      tryOnList = [];
-      saveTryOnList();
-      renderDrawerItems();
-      applyFiltersAndSort();
-      showToast('Try-On List cleared');
-    }
-  }
-
-  // =========================================================================
-  // TOAST NOTIFICATIONS
-  // =========================================================================
-  let toastTimeout = null;
-  function showToast(msg) {
-    if (toastTimeout) clearTimeout(toastTimeout);
-    elements.toastMessage.textContent = msg;
-    elements.toast.classList.add('show');
-    toastTimeout = setTimeout(() => {
-      elements.toast.classList.remove('show');
-    }, 2400);
-  }
-
-  // =========================================================================
-  // EVENT LISTENERS
+  // EVENT LISTENERS SETUP
   // =========================================================================
   function setupEventListeners() {
-    // Search Input
-    elements.searchInput.addEventListener('input', (e) => {
-      currentSearchQuery = e.target.value;
-      elements.clearSearchBtn.style.display = currentSearchQuery ? 'flex' : 'none';
-      applyFiltersAndSort();
+    // Search input (Debounced)
+    let searchTimer = null;
+    function handleSearch(val) {
+      currentSearch = val;
+      if (dom.itemSearchInput && dom.itemSearchInput.value !== val) {
+        dom.itemSearchInput.value = val;
+      }
+      if (dom.headerSearchInput && dom.headerSearchInput.value !== val) {
+        dom.headerSearchInput.value = val;
+      }
+      if (dom.clearSearchBtn) {
+        if (val.length > 0) dom.clearSearchBtn.classList.remove('hidden');
+        else dom.clearSearchBtn.classList.add('hidden');
+      }
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(applyFiltersAndSort, 200);
+    }
+
+    dom.itemSearchInput?.addEventListener('input', (e) => handleSearch(e.target.value));
+    dom.headerSearchInput?.addEventListener('input', (e) => handleSearch(e.target.value));
+
+    dom.clearSearchBtn?.addEventListener('click', () => {
+      handleSearch('');
     });
 
-    elements.clearSearchBtn.addEventListener('click', () => {
-      elements.searchInput.value = '';
-      currentSearchQuery = '';
-      elements.clearSearchBtn.style.display = 'none';
-      elements.searchInput.focus();
-      applyFiltersAndSort();
-    });
-
-    // Color Select
-    elements.colorSelect.addEventListener('change', (e) => {
+    // Dropdowns
+    dom.colorFilter?.addEventListener('change', (e) => {
       currentColor = e.target.value;
       applyFiltersAndSort();
     });
 
-    // Size Select
-    elements.sizeSelect.addEventListener('change', (e) => {
+    dom.sizeFilter?.addEventListener('change', (e) => {
       currentSize = e.target.value;
       applyFiltersAndSort();
     });
 
-    // Sort Select
-    elements.sortSelect.addEventListener('change', (e) => {
+    dom.sortFilter?.addEventListener('change', (e) => {
       currentSort = e.target.value;
       applyFiltersAndSort();
     });
 
-    // Reset All Filters Button
-    elements.resetFilterBtn.addEventListener('click', () => {
-      elements.searchInput.value = '';
-      currentSearchQuery = '';
-      elements.clearSearchBtn.style.display = 'none';
-      elements.colorSelect.value = 'all';
-      currentColor = 'all';
-      elements.sizeSelect.value = 'all';
-      currentSize = 'all';
-      setCategory('all');
-    });
-
-    // Brand Logo click resets to all
-    const brandLink = document.getElementById('brandLogoLink');
-    if (brandLink) {
-      brandLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        elements.resetFilterBtn.click();
+    // Category Pills
+    dom.categoryPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        const cat = pill.getAttribute('data-category');
+        selectCategory(cat);
       });
+    });
+
+    // Header Nav Category Buttons
+    dom.headerNavBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const cat = btn.getAttribute('data-category');
+        selectCategory(cat);
+      });
+    });
+
+    // Footer Nav Category Links
+    dom.footerNavBtns.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const cat = link.getAttribute('data-category');
+        selectCategory(cat);
+        window.scrollTo({ top: 120, behavior: 'smooth' });
+      });
+    });
+
+    // Reset Filters
+    function resetFilters() {
+      currentSearch = '';
+      currentColor = 'all';
+      currentSize = 'all';
+      currentSort = 'code-asc';
+      if (dom.itemSearchInput) dom.itemSearchInput.value = '';
+      if (dom.headerSearchInput) dom.headerSearchInput.value = '';
+      if (dom.clearSearchBtn) dom.clearSearchBtn.classList.add('hidden');
+      if (dom.colorFilter) dom.colorFilter.value = 'all';
+      if (dom.sizeFilter) dom.sizeFilter.value = 'all';
+      if (dom.sortFilter) dom.sortFilter.value = 'code-asc';
+      selectCategory('all');
     }
 
-    // Category Pill "All"
-    const allPill = elements.categoryPills.querySelector('[data-category="all"]');
-    if (allPill) {
-      allPill.addEventListener('click', () => setCategory('all'));
+    dom.resetAllFiltersBtn?.addEventListener('click', resetFilters);
+    dom.emptyStateResetBtn?.addEventListener('click', resetFilters);
+
+    // Floating Tray Collapsible Header
+    function toggleTray() {
+      if (!dom.trayExpandedContent) return;
+      const isHidden = dom.trayExpandedContent.classList.contains('hidden');
+      if (isHidden) {
+        dom.trayExpandedContent.classList.remove('hidden');
+        if (dom.trayChevron) dom.trayChevron.textContent = 'expand_less';
+      } else {
+        dom.trayExpandedContent.classList.add('hidden');
+        if (dom.trayChevron) dom.trayChevron.textContent = 'expand_more';
+      }
     }
 
-    // Lightbox Controls
-    elements.lightboxCloseBtn.addEventListener('click', closeLightbox);
-    elements.lightboxPrevBtn.addEventListener('click', prevPhoto);
-    elements.lightboxNextBtn.addEventListener('click', nextPhoto);
+    dom.trayHeaderToggle?.addEventListener('click', toggleTray);
+    dom.quickTryOnToggle?.addEventListener('click', () => {
+      if (dom.trayExpandedContent?.classList.contains('hidden')) toggleTray();
+      dom.floatingTryOnTray?.scrollIntoView({ behavior: 'smooth' });
+    });
+    dom.headerTryOnBtn?.addEventListener('click', () => {
+      if (dom.trayExpandedContent?.classList.contains('hidden')) toggleTray();
+      dom.floatingTryOnTray?.scrollIntoView({ behavior: 'smooth' });
+    });
 
-    elements.lightboxTryOnBtn.addEventListener('click', () => {
+    // Clear Tray
+    dom.clearTrayListBtn?.addEventListener('click', () => {
+      tryOnItems = [];
+      saveToStorage(STORAGE_KEY, tryOnItems);
+      updateTrayUI();
+      showToast('Fitting room tray cleared');
+    });
+
+    // Dispatch Fitting Room
+    dom.dispatchFittingRoomBtn?.addEventListener('click', () => {
+      if (tryOnItems.length === 0) {
+        showToast('Please select at least 1 ensemble first');
+        return;
+      }
+      showToast('🚀 Notified In-Store Stylist! Booths 1-6 assigned.');
+    });
+
+    // Send WhatsApp to Stylist
+    dom.sendWhatsappBtn?.addEventListener('click', () => {
+      if (tryOnItems.length === 0) {
+        showToast('Please add items to your tray first');
+        return;
+      }
+      const summary = tryOnItems.map((item, idx) => `${idx + 1}. ${item.sku} - ${item.title} (${item.rent})`).join('\n');
+      const text = encodeURIComponent(`Hello Nafasat Boutique Assistant! I would like to try on the following shortlisted dresses in the fitting room:\n\n${summary}\n\nPlease bring them to my booth.`);
+      window.open(`https://wa.me/923000000000?text=${text}`, '_blank');
+    });
+
+    // Modal Events
+    dom.closeAnglesModal?.addEventListener('click', closeAnglesModal);
+    dom.anglesModal?.addEventListener('click', (e) => {
+      if (e.target === dom.anglesModal) closeAnglesModal();
+    });
+
+    dom.modalAddTryOn?.addEventListener('click', () => {
       if (activeProduct) {
-        toggleFavorite(activeProduct);
+        addToTryOn(activeProduct.sku);
+        closeAnglesModal();
       }
     });
 
-    elements.lightboxModal.addEventListener('click', (e) => {
-      if (e.target.classList.contains('lightbox-stage') || e.target.classList.contains('lightbox-backdrop')) {
-        closeLightbox();
-      }
-    });
-
+    // Keyboard ESC to close modal
     document.addEventListener('keydown', (e) => {
-      if (!elements.lightboxModal.classList.contains('active')) return;
-      if (e.key === 'Escape') closeLightbox();
-      else if (e.key === 'ArrowLeft') prevPhoto();
-      else if (e.key === 'ArrowRight') nextPhoto();
+      if (e.key === 'Escape' && dom.anglesModal && !dom.anglesModal.classList.contains('hidden')) {
+        closeAnglesModal();
+      }
+    });
+  }
+
+  function selectCategory(cat) {
+    currentCategory = cat;
+
+    // Update Category Pills Active Class
+    dom.categoryPills.forEach(pill => {
+      if (pill.getAttribute('data-category') === cat) {
+        pill.classList.remove('bg-surface-card', 'text-on-surface-variant');
+        pill.classList.add('bg-on-background', 'text-on-primary', 'shadow-sm');
+      } else {
+        pill.classList.remove('bg-on-background', 'text-on-primary', 'shadow-sm');
+        pill.classList.add('bg-surface-card', 'text-on-surface-variant');
+      }
     });
 
-    // Touch Swipe Gestures
-    let touchStartX = 0;
-    let touchEndX = 0;
-    const stage = document.querySelector('.lightbox-stage');
-
-    stage.addEventListener('touchstart', (e) => {
-      touchStartX = e.changedTouches[0].screenX;
-    }, { passive: true });
-
-    stage.addEventListener('touchend', (e) => {
-      touchEndX = e.changedTouches[0].screenX;
-      handleSwipe();
-    }, { passive: true });
-
-    function handleSwipe() {
-      const threshold = 50;
-      if (touchEndX < touchStartX - threshold) {
-        nextPhoto();
-      } else if (touchEndX > touchStartX + threshold) {
-        prevPhoto();
+    // Update Header Nav Active Links
+    dom.headerNavBtns.forEach(btn => {
+      if (btn.getAttribute('data-category') === cat) {
+        btn.classList.add('text-primary', 'font-bold');
+        btn.classList.remove('text-on-surface-variant');
+      } else {
+        btn.classList.remove('text-primary', 'font-bold');
+        btn.classList.add('text-on-surface-variant');
       }
+    });
+
+    // Update Banner Title Text
+    const activePill = document.querySelector(`.category-pill[data-category="${cat}"]`);
+    if (activePill && dom.currentCategoryName) {
+      const text = activePill.textContent.trim().replace(/[^\w\s&]/gi, '').trim();
+      dom.currentCategoryName.textContent = text;
     }
 
-    // Drawer Controls
-    elements.tryOnDrawerBtn.addEventListener('click', openDrawer);
-    elements.drawerCloseBtn.addEventListener('click', closeDrawer);
-    elements.drawerOverlay.addEventListener('click', closeDrawer);
-    elements.whatsappShareListBtn.addEventListener('click', sendListToWhatsApp);
-    elements.printListBtn.addEventListener('click', printOrSaveList);
-    elements.clearTryOnListBtn.addEventListener('click', clearTryOnList);
+    applyFiltersAndSort();
   }
 
-  function escapeHtml(str) {
-    if (!str) return '';
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
+  // Kickoff on DOM Ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
   }
-
-  document.addEventListener('DOMContentLoaded', init);
 
 })();

@@ -1,288 +1,585 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Nafasat Fashion | The Store for Rental Dresses and Accessories</title>
-  <meta name="description" content="Nafasat - The store for rental dresses and accessories. Explore our exclusive collections of Bridal Wear, Party Wear, Kids Rentals, Sarees, and Jewelry.">
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <meta content="web_standard" name="shell-type"/>
+  <title>Nafasat Fashion & Rentals — In-Store Digital Catalogue</title>
+  <link rel="icon" type="image/png" href="assets/logo.png">
   
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  
-  <!-- Main Stylesheet -->
-  <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
+  <style>
+    @layer base {
+      html, body { margin: 0; padding: 0; }
+      body { overscroll-behavior: none; }
+      main > :first-child { margin-top: 0 !important; }
+      main > :last-child { margin-bottom: 0 !important; }
+    }
+    ::-webkit-scrollbar { display: none; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .card-dummy-img { object-fit: cover; object-position: top center; }
+  </style>
 
-  <!-- Top Boutique Header with Authentic Logo -->
-  <header class="top-header">
-    <div class="header-container">
-      <div class="brand-area">
-        <a href="#" class="brand-link" id="brandLogoLink" title="Nafasat Fashion">
-          <img src="assets/logo.png" alt="Nafasat Fashion" class="brand-logo">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-primary": "#ffffff",
+            "on-background": "#1b1c1a",
+            "on-tertiary": "#ffffff",
+            "brand-coral": "#FF6B6B",
+            "brand-gold-deep": "#B8860B",
+            "error-container": "#ffdad6",
+            "primary": "#835500",
+            "background": "#fbf9f6",
+            "surface-container-high": "#eae8e5",
+            "on-primary-fixed-variant": "#633f00",
+            "inverse-on-surface": "#f2f0ed",
+            "surface": "#fbf9f6",
+            "on-primary-fixed": "#291800",
+            "surface-variant": "#e4e2df",
+            "inverse-surface": "#30312f",
+            "primary-fixed": "#ffddb4",
+            "surface-tint": "#835500",
+            "on-secondary": "#ffffff",
+            "tertiary": "#00629f",
+            "on-secondary-fixed-variant": "#434844",
+            "on-error-container": "#93000a",
+            "surface-subtle": "#F2EFEB",
+            "surface-dim": "#dbdad7",
+            "secondary-fixed-dim": "#c3c8c3",
+            "text-muted": "#6C757D",
+            "surface-container-lowest": "#ffffff",
+            "on-surface-variant": "#524534",
+            "on-error": "#ffffff",
+            "surface-card": "#FFFFFF",
+            "brand-sky": "#4DABF7",
+            "border-hairline": "#E5DFD7",
+            "on-tertiary-fixed-variant": "#004a79",
+            "surface-bright": "#fbf9f6",
+            "surface-container-low": "#f5f3f0",
+            "outline": "#857462",
+            "on-surface": "#1b1c1a",
+            "surface-container-highest": "#e4e2df",
+            "on-primary-container": "#644000",
+            "tertiary-container": "#77bbff",
+            "tertiary-fixed-dim": "#9bcbff",
+            "on-secondary-container": "#606662",
+            "on-secondary-fixed": "#181d1a",
+            "inverse-primary": "#ffb955",
+            "primary-container": "#f5a623",
+            "secondary-container": "#dfe4df",
+            "tertiary-fixed": "#d0e4ff",
+            "outline-variant": "#d7c3ae",
+            "secondary": "#5a605c",
+            "surface-container": "#efeeeb",
+            "primary-fixed-dim": "#ffb955",
+            "secondary-fixed": "#dfe4df",
+            "error": "#ba1a1a",
+            "on-tertiary-container": "#004a7a",
+            "on-tertiary-fixed": "#001d34"
+          },
+          borderRadius: {
+            DEFAULT: "0.125rem",
+            lg: "0.25rem",
+            xl: "0.5rem",
+            full: "0.75rem"
+          },
+          spacing: {
+            "space-sm": "0.5rem",
+            gutter: "1.5rem",
+            "space-lg": "1.5rem",
+            "space-md": "1rem",
+            margin: "3rem",
+            "space-xl": "2.5rem",
+            "space-xs": "0.25rem",
+            "gutter-mobile": "1rem",
+            "margin-mobile": "1rem"
+          },
+          fontFamily: {
+            "label-md": ["Montserrat", "sans-serif"],
+            "label-code": ["Montserrat", "monospace"],
+            "headline-sm": ["Epilogue", "serif"],
+            "headline-md": ["Epilogue", "serif"],
+            "label-lg": ["Montserrat", "sans-serif"],
+            "body-sm": ["Montserrat", "sans-serif"],
+            "display-lg": ["Epilogue", "serif"],
+            "display-lg-mobile": ["Epilogue", "serif"],
+            "body-lg": ["Montserrat", "sans-serif"],
+            "headline-lg": ["Epilogue", "serif"],
+            "body-md": ["Montserrat", "sans-serif"]
+          },
+          fontSize: {
+            "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.06em", fontWeight: "600" }],
+            "label-code": ["11px", { lineHeight: "14px", letterSpacing: "0.12em", fontWeight: "700" }],
+            "headline-sm": ["20px", { lineHeight: "28px", fontWeight: "500" }],
+            "headline-md": ["24px", { lineHeight: "32px", fontWeight: "500" }],
+            "label-lg": ["14px", { lineHeight: "20px", letterSpacing: "0.04em", fontWeight: "600" }],
+            "body-sm": ["13px", { lineHeight: "20px", fontWeight: "400" }],
+            "display-lg": ["56px", { lineHeight: "64px", letterSpacing: "-0.02em", fontWeight: "600" }],
+            "display-lg-mobile": ["36px", { lineHeight: "44px", letterSpacing: "-0.01em", fontWeight: "600" }],
+            "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
+            "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "600" }],
+            "body-md": ["15px", { lineHeight: "24px", fontWeight: "400" }]
+          }
+        }
+      }
+    };
+  </script>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body class="bg-surface font-body-md text-body-md text-on-surface antialiased">
+
+  <!-- =========================================================================
+       HEADER & IN-STORE BRAND NAVIGATION
+       ========================================================================= -->
+  <header class="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+    <div class="h-20 max-w-7xl mx-auto px-gutter flex items-center justify-between gap-space-md">
+      
+      <!-- Brand Logo & Slogan -->
+      <a href="/" class="flex items-center gap-space-sm shrink-0 no-underline">
+        <img alt="Nafasat Fashion Logo" class="h-10 w-auto object-contain" src="assets/logo.png"/>
+        <div class="flex flex-col">
+          <span class="font-headline-sm text-headline-sm tracking-wider uppercase text-on-surface font-semibold">NAFASAT</span>
+          <span class="font-label-code text-label-code text-on-surface-variant uppercase tracking-widest text-[10px]">The store for rental dresses and accessories</span>
+        </div>
+      </a>
+
+      <!-- Category Nav Links -->
+      <nav class="hidden xl:flex items-center gap-space-md shrink-0" id="headerCategoryNav">
+        <button class="nav-cat-btn transition-colors uppercase font-bold text-primary text-label-md" data-category="all">All Collections</button>
+        <button class="nav-cat-btn font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors uppercase" data-category="rental-bridal">Bridal Wear</button>
+        <button class="nav-cat-btn font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors uppercase" data-category="female-partywear">Party Wear</button>
+        <button class="nav-cat-btn font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors uppercase" data-category="saree">Sarees</button>
+        <button class="nav-cat-btn font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors uppercase" data-category="shoes">Footwear</button>
+        <button class="nav-cat-btn font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors uppercase" data-category="jewelry">Jewelry</button>
+        <button class="nav-cat-btn font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors uppercase" data-category="purses">Clutches</button>
+      </nav>
+
+      <!-- Right Header Actions -->
+      <div class="flex items-center gap-space-sm shrink-0">
+        <!-- Quick Header Search -->
+        <div class="relative hidden lg:flex items-center">
+          <span class="material-symbols-outlined absolute left-space-sm text-on-surface-variant text-[18px]">search</span>
+          <input class="pl-8 pr-space-sm py-space-xs bg-surface-container-low text-on-surface placeholder:text-on-surface-variant font-body-sm text-body-sm rounded-lg focus:outline-none focus:bg-surface-container-lowest w-44 xl:w-56 transition-all" id="headerSearchInput" placeholder="Search SKU, color..." type="text"/>
+        </div>
+
+        <!-- Try-On Tray Toggle Button -->
+        <button class="flex items-center gap-space-xs bg-primary-container text-on-primary-container px-space-sm py-space-xs rounded-full font-label-md text-label-md hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors" id="headerTryOnBtn">
+          <span class="material-symbols-outlined text-[18px]">styler</span>
+          <span>Try-On List (<span id="headerTryOnCount">0</span>)</span>
+        </button>
+
+        <!-- Staff Admin Portal Link -->
+        <a class="hidden sm:inline-flex items-center gap-space-xs bg-surface-container-high text-on-surface hover:bg-surface-container-highest hover:text-primary px-space-sm py-space-xs rounded-lg font-label-md text-label-md transition-colors" href="/admin">
+          <span class="material-symbols-outlined text-[16px]">admin_panel_settings</span>
+          <span>Staff Admin</span>
         </a>
-        <div class="brand-tagline-wrap">
-          <p class="brand-desc">The store for rental dresses and accessories</p>
+
+        <!-- User / Concierge Icon -->
+        <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0 text-on-primary">
+          <span class="material-symbols-outlined text-[18px]">person</span>
         </div>
       </div>
 
-      <div class="header-actions">
-        <button id="tryOnDrawerBtn" class="btn-tryon" aria-label="View Try-On List">
-          <i class="fa-solid fa-heart"></i>
-          <span class="btn-text">Try-On List</span>
-          <span id="tryOnCountBadge" class="badge">0</span>
-        </button>
-      </div>
     </div>
   </header>
 
-  <!-- Controls, Search, and Multi-Filter Section -->
-  <section class="controls-section">
-    <div class="controls-container">
-      
-      <!-- Top Row: Instant Search & Secondary Filters (Color, Size, Sort) -->
-      <div class="controls-top-row">
-        <!-- Live Search -->
-        <div class="search-wrapper">
-          <i class="fa-solid fa-magnifying-glass search-icon"></i>
-          <input 
-            type="text" 
-            id="searchInput" 
-            placeholder="Search by Item Code (e.g. NRFAB, 0001), color, or keyword..." 
-            autocomplete="off" 
-            spellcheck="false"
-          >
-          <button id="clearSearchBtn" class="clear-search-btn" title="Clear search">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        </div>
+  <!-- =========================================================================
+       MAIN SHOWROOM STAGE
+       ========================================================================= -->
+  <main class="w-full pt-20 bg-surface min-h-screen">
+    <div class="flex flex-col w-full">
 
-        <!-- Filter Dropdowns Row -->
-        <div class="filter-dropdowns">
-          <!-- Color Filter -->
-          <div class="filter-group">
-            <label for="colorSelect"><i class="fa-solid fa-palette"></i> Color:</label>
-            <select id="colorSelect">
-              <option value="all">All Colors</option>
-              <!-- Dynamic colors injected via JS -->
-            </select>
+      <!-- Sub-Header In-Store Concierge Banner -->
+      <section class="w-full bg-surface-container-high/80 backdrop-blur-md px-gutter py-space-sm border-b border-border-hairline">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-space-sm">
+          <div class="flex items-center gap-space-sm text-on-surface">
+            <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary-container text-on-primary-container shrink-0">
+              <span class="material-symbols-outlined text-[16px]">dresser</span>
+            </span>
+            <p class="font-body-sm text-body-sm text-on-surface-variant">
+              <strong class="font-semibold text-on-surface">In-Store Digital Concierge:</strong> 
+              Tap <span class="text-primary font-medium">✨ Add to Try-On</span> on any ensemble, and our stylists will dispatch it directly to your fitting room booth.
+            </p>
           </div>
-
-          <!-- Size Filter -->
-          <div class="filter-group">
-            <label for="sizeSelect"><i class="fa-solid fa-ruler"></i> Size:</label>
-            <select id="sizeSelect">
-              <option value="all">All Sizes</option>
-              <!-- Dynamic sizes injected via JS -->
-            </select>
-          </div>
-
-          <!-- Sort Select -->
-          <div class="filter-group">
-            <label for="sortSelect"><i class="fa-solid fa-arrow-down-short-wide"></i> Sort:</label>
-            <select id="sortSelect">
-              <option value="code-asc">Code (A → Z)</option>
-              <option value="code-desc">Code (Z → A)</option>
-              <option value="rent-asc">Rent: Low to High</option>
-              <option value="rent-desc">Rent: High to Low</option>
-              <option value="photos-desc">Most Photos</option>
-            </select>
+          <div class="flex items-center gap-space-md shrink-0">
+            <span class="inline-flex items-center gap-1.5 font-label-md text-label-md text-brand-gold-deep bg-surface-card px-2.5 py-1 rounded-full shadow-sm">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              Fitting Booths 1-6 Ready
+            </span>
+            <button class="flex items-center gap-1.5 font-label-md text-label-md text-primary hover:text-on-primary-fixed-variant transition-colors" id="quick-tryon-toggle">
+              <span class="material-symbols-outlined text-[18px]">styler</span>
+              <span>View Tray (<span id="banner-count">0</span>)</span>
+            </button>
           </div>
         </div>
-      </div>
+      </section>
 
-      <!-- Categories Pills Filter -->
-      <nav class="categories-nav" aria-label="Collections">
-        <div class="categories-scroll" id="categoryPills">
-          <button class="cat-pill active" data-category="all">
-            <span>✨ All Collections</span>
-            <span class="pill-count" id="count-all">...</span>
-          </button>
-          <!-- Dynamic categories will be injected here -->
+      <!-- Main Search & Filter Stage -->
+      <section class="w-full px-gutter pt-space-lg pb-space-md">
+        <div class="max-w-7xl mx-auto flex flex-col gap-space-md">
+          
+          <!-- Search Input Bar & Filter Select Dropdowns -->
+          <div class="bg-surface-card rounded-xl p-space-sm shadow-sm flex flex-col lg:flex-row items-center justify-between gap-space-sm border border-border-hairline">
+            <!-- Search Bar -->
+            <div class="relative w-full lg:flex-1 flex items-center">
+              <span class="material-symbols-outlined absolute left-space-md text-on-surface-variant text-[22px]">search</span>
+              <input class="w-full pl-12 pr-10 py-3 bg-surface-container-low text-on-surface placeholder:text-on-surface-variant/70 font-body-md text-body-md rounded-lg focus:outline-none focus:bg-surface-container-lowest transition-all" id="itemSearchInput" placeholder="Search by item code (e.g. NRFAB0001, 20231118), color, or silhouette..." type="text"/>
+              <button class="hidden absolute right-3 text-on-surface-variant hover:text-on-surface" id="clearSearchBtn" title="Clear search">
+                <span class="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+
+            <!-- Dropdowns: Color, Size, Sort -->
+            <div class="w-full lg:w-auto flex flex-wrap items-center gap-space-xs">
+              
+              <!-- Color Filter -->
+              <div class="relative min-w-[150px] flex-1 sm:flex-initial">
+                <div class="flex items-center bg-surface-container-low rounded-lg px-3 py-2.5">
+                  <span class="material-symbols-outlined text-primary text-[18px] mr-1.5">palette</span>
+                  <select class="w-full bg-transparent font-label-md text-label-md text-on-surface focus:outline-none cursor-pointer" id="colorFilter">
+                    <option value="all">Color: All</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Size Filter -->
+              <div class="relative min-w-[140px] flex-1 sm:flex-initial">
+                <div class="flex items-center bg-surface-container-low rounded-lg px-3 py-2.5">
+                  <span class="material-symbols-outlined text-primary text-[18px] mr-1.5">straighten</span>
+                  <select class="w-full bg-transparent font-label-md text-label-md text-on-surface focus:outline-none cursor-pointer" id="sizeFilter">
+                    <option value="all">Size: All</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Sort Filter -->
+              <div class="relative min-w-[160px] flex-1 sm:flex-initial">
+                <div class="flex items-center bg-surface-container-low rounded-lg px-3 py-2.5">
+                  <span class="material-symbols-outlined text-primary text-[18px] mr-1.5">sort</span>
+                  <select class="w-full bg-transparent font-label-md text-label-md text-on-surface focus:outline-none cursor-pointer" id="sortFilter">
+                    <option value="code-asc">Code (A → Z)</option>
+                    <option value="code-desc">Code (Z → A)</option>
+                    <option value="rent-low">Rent: Low to High</option>
+                    <option value="rent-high">Rent: High to Low</option>
+                  </select>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Category Pills Navigation -->
+          <div class="w-full overflow-x-auto pb-1 no-scrollbar">
+            <div class="flex items-center gap-space-xs min-w-max" id="categoryPillContainer">
+              <button class="category-pill active flex items-center gap-1.5 px-4 py-2 rounded-full font-label-md text-label-md bg-on-background text-on-primary shadow-sm transition-all" data-category="all">
+                <span>✨</span>
+                <span>All Collections (<span id="count-all">385</span>)</span>
+              </button>
+              <button class="category-pill flex items-center gap-1.5 px-4 py-2 rounded-full font-label-md text-label-md bg-surface-card text-on-surface-variant hover:bg-surface-container-high transition-all" data-category="rental-bridal">
+                <span>💍</span>
+                <span>Bridal Wear (<span id="count-rental-bridal">41</span>)</span>
+              </button>
+              <button class="category-pill flex items-center gap-1.5 px-4 py-2 rounded-full font-label-md text-label-md bg-surface-card text-on-surface-variant hover:bg-surface-container-high transition-all" data-category="female-partywear">
+                <span>🎉</span>
+                <span>Party Wear (<span id="count-female-partywear">113</span>)</span>
+              </button>
+              <button class="category-pill flex items-center gap-1.5 px-4 py-2 rounded-full font-label-md text-label-md bg-surface-card text-on-surface-variant hover:bg-surface-container-high transition-all" data-category="kids-rental">
+                <span>👗</span>
+                <span>Girls Rental (<span id="count-kids-rental">79</span>)</span>
+              </button>
+              <button class="category-pill flex items-center gap-1.5 px-4 py-2 rounded-full font-label-md text-label-md bg-surface-card text-on-surface-variant hover:bg-surface-container-high transition-all" data-category="kids-coatpant">
+                <span>👔</span>
+                <span>Boys Coat-Pants (<span id="count-kids-coatpant">28</span>)</span>
+              </button>
+              <button class="category-pill flex items-center gap-1.5 px-4 py-2 rounded-full font-label-md text-label-md bg-surface-card text-on-surface-variant hover:bg-surface-container-high transition-all" data-category="saree">
+                <span>🥻</span>
+                <span>Sarees (<span id="count-saree">48</span>)</span>
+              </button>
+              <button class="category-pill flex items-center gap-1.5 px-4 py-2 rounded-full font-label-md text-label-md bg-surface-card text-on-surface-variant hover:bg-surface-container-high transition-all" data-category="purses">
+                <span>👜</span>
+                <span>Clutches & Purses (<span id="count-purses">29</span>)</span>
+              </button>
+              <button class="category-pill flex items-center gap-1.5 px-4 py-2 rounded-full font-label-md text-label-md bg-surface-card text-on-surface-variant hover:bg-surface-container-high transition-all" data-category="shoes">
+                <span>👠</span>
+                <span>Footwear (<span id="count-shoes">29</span>)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Catalogue Status & View Mode Ribbon -->
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-sm pt-2">
+            <div class="flex items-center gap-2 font-body-sm text-body-sm text-on-surface-variant">
+              <span>Showing <strong class="text-on-surface font-semibold" id="visible-count">385</strong> outfits in <span class="text-primary font-medium" id="current-category-name">All Collections</span></span>
+              <span class="w-1 h-1 rounded-full bg-on-surface-variant/40"></span>
+              <span class="text-brand-gold-deep flex items-center gap-1 font-label-code text-label-code uppercase tracking-wider">
+                <span class="material-symbols-outlined text-[14px]">bolt</span> Live In-Store Inventory
+              </span>
+            </div>
+            <div class="flex items-center gap-space-xs self-end sm:self-auto">
+              <button class="font-label-md text-label-md text-on-surface-variant hover:text-primary px-3 py-1.5 rounded-lg transition-colors" id="resetAllFiltersBtn">
+                Reset Filters
+              </button>
+            </div>
+          </div>
+
         </div>
-      </nav>
+      </section>
 
-      <!-- Active Filters Status Bar -->
-      <div class="status-bar">
-        <div class="results-info">
-          Showing <strong id="resultsCount">0</strong> outfits in <span id="activeFiltersSummary">All Collections</span>
+      <!-- =======================================================================
+           CATALOGUE GRID SECTION (Dynamically Loaded)
+           ======================================================================= -->
+      <section class="w-full px-gutter py-space-md">
+        <div class="max-w-7xl mx-auto">
+          
+          <!-- Loading Spinner -->
+          <div id="loadingState" class="w-full py-20 flex flex-col items-center justify-center text-center">
+            <div class="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4"></div>
+            <p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Loading showroom catalogue...</p>
+          </div>
+
+          <!-- Dynamic Products Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-space-lg hidden" id="catalogGrid">
+            <!-- Rendered dynamically by js/app.js -->
+          </div>
+
+          <!-- Empty State Container -->
+          <div class="hidden w-full py-16 flex flex-col items-center justify-center text-center bg-surface-card rounded-2xl p-8 shadow-sm border border-border-hairline" id="noResultsState">
+            <div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant mb-4">
+              <span class="material-symbols-outlined text-[32px]">manage_search</span>
+            </div>
+            <h3 class="font-headline-md text-headline-md text-on-surface font-semibold mb-2">No matching outfits found</h3>
+            <p class="font-body-md text-body-md text-on-surface-variant max-w-md mb-6">
+              Try resetting the color, size, or search filters to explore our 385+ boutique gowns, sarees, and accessories.
+            </p>
+            <button class="bg-primary text-on-primary font-label-lg text-label-lg px-6 py-3 rounded-lg hover:bg-on-primary-container transition-all" id="emptyStateResetBtn">
+              Reset All Filters
+            </button>
+          </div>
+
         </div>
-        <div class="active-tags-row" id="activeTagsRow" style="display: none;">
-          <!-- Active filter pills with 'x' to remove -->
+      </section>
+
+      <!-- =======================================================================
+           IN-STORE RENTAL POLICY & CONCIERGE GUIDE RIBBON
+           ======================================================================= -->
+      <section class="w-full px-gutter py-space-lg bg-surface-container-low/50 border-t border-border-hairline mt-12">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-space-md">
+          <div class="bg-surface-card p-5 rounded-xl flex items-start gap-3 shadow-sm border border-border-hairline">
+            <span class="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center text-on-primary-fixed shrink-0">
+              <span class="material-symbols-outlined text-[22px]">dry_cleaning</span>
+            </span>
+            <div>
+              <h4 class="font-headline-sm text-[16px] font-semibold text-on-surface mb-1">Pristine Hygiene Standard</h4>
+              <p class="font-body-sm text-body-sm text-on-surface-variant">Each garment undergoes clinical-grade UV sanitation & organic steam finishing before and after every rental cycle.</p>
+            </div>
+          </div>
+          
+          <div class="bg-surface-card p-5 rounded-xl flex items-start gap-3 shadow-sm border border-border-hairline">
+            <span class="w-10 h-10 rounded-lg bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed shrink-0">
+              <span class="material-symbols-outlined text-[22px]">content_cut</span>
+            </span>
+            <div>
+              <h4 class="font-headline-sm text-[16px] font-semibold text-on-surface mb-1">Complimentary In-House Tucking</h4>
+              <p class="font-body-sm text-body-sm text-on-surface-variant">Our master tailor performs non-invasive custom fit pinning within 15 minutes during your fitting room trial.</p>
+            </div>
+          </div>
+          
+          <div class="bg-surface-card p-5 rounded-xl flex items-start gap-3 shadow-sm border border-border-hairline">
+            <span class="w-10 h-10 rounded-lg bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed shrink-0">
+              <span class="material-symbols-outlined text-[22px]">verified_user</span>
+            </span>
+            <div>
+              <h4 class="font-headline-sm text-[16px] font-semibold text-on-surface mb-1">Instant Deposit Release</h4>
+              <p class="font-body-sm text-body-sm text-on-surface-variant">Your refundable security deposit is refunded on the spot as soon as the items are returned to our boutique desk.</p>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
 
-    </div>
-  </section>
-
-  <!-- Main Product Catalog Grid -->
-  <main class="main-content">
-    <div class="content-container">
-      
-      <!-- Loading State -->
-      <div id="loadingState" class="state-message">
-        <div class="spinner"></div>
-        <p>Loading catalogue...</p>
-      </div>
-
-      <!-- Empty State -->
-      <div id="emptyState" class="state-message" style="display: none;">
-        <i class="fa-solid fa-vest-patches empty-icon"></i>
-        <h3>No matching outfits found</h3>
-        <p>Try resetting the color, size, or search filters to view more items.</p>
-        <button id="resetFilterBtn" class="btn-secondary">Reset All Filters</button>
-      </div>
-
-      <!-- Product Cards Grid -->
-      <div id="productGrid" class="product-grid">
-        <!-- Injected via JavaScript -->
-      </div>
     </div>
   </main>
 
-  <!-- Fullscreen Interactive Lightbox / Modal -->
-  <div id="lightboxModal" class="lightbox-modal" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="lightbox-backdrop"></div>
-    <div class="lightbox-container">
-      <!-- Close button -->
-      <button class="lightbox-close" id="lightboxCloseBtn" aria-label="Close modal">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-
-      <!-- Main viewing stage -->
-      <div class="lightbox-stage">
-        <button class="nav-arrow nav-prev" id="lightboxPrevBtn" aria-label="Previous angle">
-          <i class="fa-solid fa-chevron-left"></i>
-        </button>
-        
-        <div class="lightbox-image-wrapper">
-          <img id="lightboxMainImage" src="" alt="Dummy and angle view" loading="eager">
-          <div class="image-zoom-hint">
-            <i class="fa-solid fa-camera"></i> <span id="lightboxBadgeLabel">Mannequin View</span>
-          </div>
+  <!-- =========================================================================
+       PERSISTENT FLOATING CUSTOMER TRY-ON TRAY BAR (Docked Bottom Right)
+       ========================================================================= -->
+  <aside class="fixed bottom-4 right-4 sm:right-8 z-40 max-w-sm w-[calc(100vw-2rem)] sm:w-96 bg-surface-card/95 backdrop-blur-xl rounded-2xl shadow-[0_12px_32px_-4px_rgba(31,36,33,0.18)] border border-border-hairline overflow-hidden transition-all duration-300" id="floatingTryOnTray">
+    <!-- Tray Header / Collapsible trigger -->
+    <div class="p-3.5 bg-surface-container flex items-center justify-between cursor-pointer" id="trayHeaderToggle">
+      <div class="flex items-center gap-2.5">
+        <div class="relative">
+          <span class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary">
+            <span class="material-symbols-outlined text-[18px]">dresser</span>
+          </span>
+          <span class="absolute -top-1 -right-1 w-4 h-4 bg-brand-coral text-white text-[10px] font-bold rounded-full flex items-center justify-center" id="trayBadgeCount">
+            0
+          </span>
         </div>
+        <div class="flex flex-col">
+          <span class="font-headline-sm text-[15px] font-semibold text-on-surface">Customer Try-On List</span>
+          <span class="font-label-code text-[10px] text-on-surface-variant uppercase tracking-wider">Booths 1-6 Active</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <button class="p-1 text-on-surface-variant hover:text-on-surface" id="toggleTrayExpandBtn">
+          <span class="material-symbols-outlined text-[20px]" id="trayChevron">expand_more</span>
+        </button>
+      </div>
+    </div>
 
-        <button class="nav-arrow nav-next" id="lightboxNextBtn" aria-label="Next angle">
-          <i class="fa-solid fa-chevron-right"></i>
+    <!-- Collapsible Tray Content Area -->
+    <div class="p-4 flex flex-col gap-3 max-h-[380px] overflow-y-auto hidden" id="trayExpandedContent">
+      <p class="font-body-sm text-body-sm text-on-surface-variant leading-tight">
+        Show this list to our boutique assistant to bring these selected outfits directly to your fitting booth.
+      </p>
+
+      <!-- Tray Item List Container -->
+      <div class="flex flex-col gap-2 divide-y divide-surface-container" id="trayItemsList">
+        <!-- Rendered dynamically by js/app.js -->
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="pt-2 flex flex-col gap-2">
+        <button class="w-full py-3 bg-primary text-on-primary rounded-lg font-label-lg text-label-lg font-semibold flex items-center justify-center gap-2 shadow-sm hover:bg-on-primary-container transition-all" id="dispatchFittingRoomBtn">
+          <span class="material-symbols-outlined text-[18px]">styler</span>
+          <span>Request in Fitting Room</span>
+        </button>
+        <div class="grid grid-cols-2 gap-2">
+          <button class="py-2 px-2 rounded-lg bg-emerald-600 text-white font-label-md text-label-md flex items-center justify-center gap-1 hover:bg-emerald-700 transition-colors" id="sendWhatsappBtn">
+            <span class="material-symbols-outlined text-[16px]">chat</span>
+            <span>Send to Stylist</span>
+          </button>
+          <button class="py-2 px-2 rounded-lg bg-surface-container text-on-surface-variant hover:text-on-surface font-label-md text-label-md flex items-center justify-center gap-1 transition-colors" id="clearTrayListBtn">
+            <span class="material-symbols-outlined text-[16px]">delete_sweep</span>
+            <span>Clear List</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- =========================================================================
+       MODAL: FULL-SCREEN ANGLES INSPECTION & LIGHTBOX
+       ========================================================================= -->
+  <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4" id="anglesModal">
+    <div class="bg-surface-card rounded-2xl max-w-3xl w-full p-6 shadow-2xl relative flex flex-col gap-4 max-h-[92vh] overflow-y-auto border border-border-hairline">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-border-hairline">
+        <div>
+          <span class="font-label-code text-label-code text-primary uppercase" id="modalSkuCode">NRFAB0001</span>
+          <h3 class="font-headline-md text-headline-md font-semibold text-on-surface" id="modalTitle">Ensemble Multi-Angle View</h3>
+        </div>
+        <button class="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors" id="closeAnglesModal">
+          <span class="material-symbols-outlined text-[20px]">close</span>
         </button>
       </div>
 
-      <!-- Bottom Details & Thumbnails Dock -->
-      <div class="lightbox-dock">
-        <div class="dock-header">
-          <div class="dock-title-area">
-            <div class="dock-sku-row">
-              <span class="dock-category" id="lightboxCategory">Category</span>
-              <h2 class="dock-sku" id="lightboxSku">NRFAB0001</h2>
-              <span class="dock-photo-counter" id="lightboxCounter">Photo 1 of 4</span>
-            </div>
-            
-            <div class="dock-meta-row">
-              <span class="meta-tag meta-color" id="lightboxColor"><i class="fa-solid fa-palette"></i> Color</span>
-              <span class="meta-tag meta-size" id="lightboxSize"><i class="fa-solid fa-ruler"></i> Size</span>
-              <span class="meta-tag meta-rent" id="lightboxRent"><i class="fa-solid fa-tag"></i> Rent</span>
-              <span class="meta-tag meta-deposit" id="lightboxDeposit" style="display:none;"><i class="fa-solid fa-shield-halved"></i> Deposit</span>
-            </div>
+      <!-- Angles Grid Showcase -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="modalAnglesGrid">
+        <!-- Injected dynamically by js/app.js -->
+      </div>
 
-            <p class="dock-description" id="lightboxDescription"></p>
+      <!-- Modal Footer -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-border-hairline">
+        <div class="text-on-surface-variant font-body-sm text-body-sm text-center sm:text-left">
+          <span class="block font-medium text-on-surface" id="modalRateDetails">Rental: Rs. 3,500 / 3 Days • Deposit: Rs. 7,000</span>
+          <span class="text-xs text-on-surface-variant">Standard rental cycle includes sanitization and master tucking</span>
+        </div>
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <button class="flex-1 sm:flex-initial bg-primary text-on-primary px-5 py-2.5 rounded-lg font-label-md text-label-md flex items-center justify-center gap-1.5 hover:bg-on-primary-container transition-all" id="modalAddTryOn">
+            <span class="material-symbols-outlined text-[18px]">add_task</span>
+            <span>Add to In-Store Fitting</span>
+          </button>
+          <a class="p-2.5 rounded-lg bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-700 transition-colors" id="modalWhatsappInquire" href="#" target="_blank" title="Inquire on WhatsApp">
+            <i class="fa-brands fa-whatsapp text-[18px]"></i>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       TOAST NOTIFICATION
+       ========================================================================= -->
+  <div class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 transform translate-y-16 opacity-0 pointer-events-none transition-all duration-300 flex items-center gap-2 bg-inverse-surface text-inverse-on-surface px-5 py-3 rounded-full shadow-2xl" id="toastNotification">
+    <span class="material-symbols-outlined text-primary-container text-[20px]">check_circle</span>
+    <span class="font-label-md text-label-md font-medium" id="toastMessage">Outfit added to Try-On List</span>
+  </div>
+
+  <!-- =========================================================================
+       FOOTER
+       ========================================================================= -->
+  <footer class="w-full bg-surface-container-low mt-space-xl border-t border-border-hairline">
+    <div class="max-w-7xl mx-auto px-gutter py-space-xl">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-space-lg mb-space-xl">
+        <div>
+          <div class="flex items-center gap-space-xs mb-space-sm">
+            <img src="assets/logo.png" alt="Nafasat Logo" class="h-8 w-auto object-contain">
+            <span class="font-headline-sm text-headline-sm uppercase tracking-wide text-on-surface font-semibold">NAFASAT</span>
           </div>
-
-          <div class="dock-actions">
-            <button id="lightboxTryOnBtn" class="btn-dock-action btn-tryon-toggle">
-              <i class="fa-regular fa-heart"></i>
-              <span>Add to Try-On</span>
-            </button>
-
-            <a id="lightboxWhatsAppBtn" href="#" target="_blank" rel="noopener noreferrer" class="btn-dock-action btn-whatsapp">
-              <i class="fa-brands fa-whatsapp"></i>
-              <span>Inquire / Book</span>
+          <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed mb-space-sm font-medium">The store for rental dresses and accessories</p>
+          <p class="font-body-sm text-body-sm text-on-surface-variant">Curated designer bridal ensembles, party wear, sarees, and fine jewelry accessories for your most memorable boutique occasions.</p>
+        </div>
+        
+        <div>
+          <h4 class="font-label-lg text-label-lg uppercase tracking-wider text-on-surface mb-space-md">Quick Collections</h4>
+          <ul class="space-y-space-xs font-body-sm text-body-sm text-on-surface-variant">
+            <li><a class="hover:text-primary transition-colors cursor-pointer nav-footer-cat" data-category="rental-bridal">Bridal Couture Rentals</a></li>
+            <li><a class="hover:text-primary transition-colors cursor-pointer nav-footer-cat" data-category="female-partywear">Evening & Reception Gowns</a></li>
+            <li><a class="hover:text-primary transition-colors cursor-pointer nav-footer-cat" data-category="saree">Handcrafted Silk Sarees</a></li>
+            <li><a class="hover:text-primary transition-colors cursor-pointer nav-footer-cat" data-category="shoes">Embellished Footwear</a></li>
+            <li><a class="hover:text-primary transition-colors cursor-pointer nav-footer-cat" data-category="jewelry">Polki & Kundan Jewelry</a></li>
+            <li><a class="hover:text-primary transition-colors cursor-pointer nav-footer-cat" data-category="purses">Designer Clutches & Purses</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="font-label-lg text-label-lg uppercase tracking-wider text-on-surface mb-space-md">Store Hours & Fitting</h4>
+          <div class="font-body-sm text-body-sm text-on-surface-variant space-y-space-xs">
+            <p><strong class="text-on-surface">Mon – Sat:</strong> 11:00 AM – 8:30 PM</p>
+            <p><strong class="text-on-surface">Sunday:</strong> 12:00 PM – 7:00 PM</p>
+            <p class="pt-space-xs text-primary font-medium">Fitting Room Concierge: Booths 1-6 Active</p>
+            <p class="font-body-sm text-body-sm text-on-surface-variant">Select gowns to try on via in-store tablet kiosk.</p>
+          </div>
+        </div>
+        
+        <div>
+          <h4 class="font-label-lg text-label-lg uppercase tracking-wider text-on-surface mb-space-md">Concierge & Staff</h4>
+          <p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">Need sizing advice, custom alteration consultation, or staff inventory management?</p>
+          <div class="flex flex-col gap-2">
+            <a class="inline-flex items-center gap-space-xs bg-surface-card text-on-surface hover:bg-surface-container-high px-space-md py-space-sm rounded-lg font-label-md text-label-md shadow-sm transition-colors border border-border-hairline" href="https://wa.me/923000000000?text=Hello%20Nafasat%2C%20I%20am%20inquiring%20about%20rental%20dresses" target="_blank">
+              <span class="material-symbols-outlined text-brand-coral text-[18px]">chat</span>
+              <span>WhatsApp Inquiry</span>
+            </a>
+            <a class="inline-flex items-center gap-space-xs bg-surface-container-high text-on-surface hover:bg-primary hover:text-white px-space-md py-space-sm rounded-lg font-label-md text-label-md transition-colors" href="/admin">
+              <span class="material-symbols-outlined text-[18px]">admin_panel_settings</span>
+              <span>Staff Admin Portal</span>
             </a>
           </div>
         </div>
-
-        <!-- Thumbnails Strip for All Angles -->
-        <div class="dock-thumbnails" id="lightboxThumbnails">
-          <!-- Thumbnails injected via JS -->
-        </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Try-On Shortlist Drawer -->
-  <div id="tryOnDrawer" class="drawer" aria-hidden="true">
-    <div class="drawer-overlay" id="drawerOverlay"></div>
-    <div class="drawer-content">
-      <div class="drawer-header">
-        <div class="drawer-title">
-          <i class="fa-solid fa-heart gold-icon"></i>
-          <h3>Customer Try-On List</h3>
-          <span class="badge" id="drawerCount">0</span>
+      
+      <div class="pt-space-md border-t border-border-hairline flex flex-col md:flex-row items-center justify-between gap-space-sm text-on-surface-variant font-body-sm text-body-sm">
+        <p>© 2026 Nafasat Fashion & Rentals. All rights reserved. In-Store Digital Catalogue.</p>
+        <div class="flex items-center gap-space-md">
+          <a class="hover:text-primary transition-colors" href="/admin">Admin Login</a>
+          <span>•</span>
+          <span class="text-on-surface-variant">Pristine Hygiene Standard</span>
         </div>
-        <button class="drawer-close" id="drawerCloseBtn" aria-label="Close Try-On List">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <div class="drawer-body">
-        <p class="drawer-subtitle">
-          Show this list to our boutique assistant to bring these selected dresses directly to your fitting room.
-        </p>
-
-        <div id="drawerItemsList" class="drawer-items-list">
-          <!-- Try-on items injected via JS -->
-        </div>
-
-        <div id="drawerEmptyState" class="drawer-empty" style="display: none;">
-          <i class="fa-regular fa-heart empty-heart"></i>
-          <h4>Your Try-On List is empty</h4>
-          <p>Tap the heart icon on any outfit while browsing to save it here.</p>
-        </div>
-      </div>
-
-      <div class="drawer-footer">
-        <div class="drawer-footer-actions">
-          <button id="whatsappShareListBtn" class="btn-primary w-full">
-            <i class="fa-brands fa-whatsapp"></i> Send List via WhatsApp
-          </button>
-          <div class="drawer-subactions">
-            <button id="printListBtn" class="btn-outline">
-              <i class="fa-solid fa-print"></i> Print / Save
-            </button>
-            <button id="clearTryOnListBtn" class="btn-text-danger">
-              <i class="fa-regular fa-trash-can"></i> Clear List
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Footer -->
-  <footer class="main-footer">
-    <div class="footer-container">
-      <div class="footer-brand">
-        <img src="assets/logo.png" alt="Nafasat Logo" class="footer-logo">
-        <p class="footer-desc">The store for rental dresses and accessories</p>
-      </div>
-      <div class="footer-bottom">
-        <p>&copy; 2026 Nafasat Fashion. All rights reserved. In-Store Digital Catalogue.</p>
-        <a href="/admin" class="footer-admin-link"><i class="fa-solid fa-shield-halved"></i> Staff Admin Portal</a>
       </div>
     </div>
   </footer>
 
-  <!-- Notification Toast -->
-  <div id="toast" class="toast" role="alert" aria-live="polite">
-    <i class="fa-solid fa-circle-check toast-icon"></i>
-    <span id="toastMessage">Outfit added to Try-On List</span>
-  </div>
-
-  <!-- JavaScript Application -->
+  <!-- App JavaScript Engine -->
   <script src="js/app.js"></script>
 </body>
 </html>
