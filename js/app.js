@@ -272,6 +272,18 @@
       return true;
     });
 
+    // Curated Category Priority so Bridal Wear and Party Wear dresses appear first
+    const categoryPriority = {
+      'rental-bridal': 1,
+      'female-partywear': 2,
+      'kids-rental': 3,
+      'saree': 4,
+      'kids-coatpant': 5,
+      'jewelry': 6,
+      'purses': 7,
+      'shoes': 8
+    };
+
     // Sort
     if (currentSort === 'rent-low') {
       filteredProducts.sort((a, b) => {
@@ -288,8 +300,13 @@
     } else if (currentSort === 'code-desc') {
       filteredProducts.sort((a, b) => (b.sku || '').localeCompare(a.sku || ''));
     } else {
-      // Default: code-asc
-      filteredProducts.sort((a, b) => (a.sku || '').localeCompare(b.sku || ''));
+      // Default: prioritize dresses (Bridal & Party wear) first, then SKU
+      filteredProducts.sort((a, b) => {
+        const pa = categoryPriority[a.category_id] || 99;
+        const pb = categoryPriority[b.category_id] || 99;
+        if (pa !== pb) return pa - pb;
+        return (a.sku || '').localeCompare(b.sku || '');
+      });
     }
 
     // Update Counter Ribbon
@@ -300,7 +317,7 @@
   }
 
   // =========================================================================
-  // CARD RENDERER (Intelligent Dummy Anchoring)
+  // CARD RENDERER (Intelligent Dummy Anchoring & Perfectly Aligned Grid)
   // =========================================================================
   function renderProductCards(products) {
     const grid = dom.catalogGrid;
@@ -314,7 +331,7 @@
 
     if (dom.noResultsState) dom.noResultsState.classList.add('hidden');
 
-    // Render cards (virtualized to first 80 for instantaneous DOM performance)
+    // Render cards (virtualized to first 100 for instantaneous DOM performance)
     const cardsToRender = products.slice(0, 100);
 
     const cardsHtml = cardsToRender.map(p => {
@@ -325,11 +342,28 @@
       const depositText = formatDeposit(p.deposit);
       const colorDot = getColorDot(p.standard_color);
 
+      // Distinguish apparel (with dummy/mannequin) from accessories
+      const isApparel = ['rental-bridal', 'female-partywear', 'saree', 'kids-rental', 'kids-coatpant'].includes(p.category_id);
+      let catBadgeIcon = 'accessibility_new';
+      let catBadgeText = 'Mannequin';
+      if (!isApparel) {
+        if (p.category_id === 'shoes') {
+          catBadgeIcon = 'footprint';
+          catBadgeText = 'Footwear';
+        } else if (p.category_id === 'purses') {
+          catBadgeIcon = 'shopping_bag';
+          catBadgeText = 'Clutch';
+        } else if (p.category_id === 'jewelry') {
+          catBadgeIcon = 'diamond';
+          catBadgeText = 'Jewelry';
+        }
+      }
+
       return `
-        <article class="garment-card group bg-surface-card rounded-xl overflow-hidden shadow-[0_4px_20px_-2px_rgba(31,36,33,0.04)] hover:shadow-md transition-all duration-300 flex flex-col border border-border-hairline" data-sku="${p.sku}">
+        <article class="garment-card group bg-surface-card rounded-xl overflow-hidden shadow-[0_4px_20px_-2px_rgba(31,36,33,0.04)] hover:shadow-md transition-all duration-300 flex flex-col border border-border-hairline h-full" data-sku="${p.sku}">
           
           <!-- Top Media Stage: Tall 3/4 with Dummy anchored to top -->
-          <div class="relative w-full aspect-[3/4] bg-surface-container-high overflow-hidden cursor-pointer open-angles-trigger" data-sku="${p.sku}">
+          <div class="relative w-full aspect-[3/4] bg-surface-container-high overflow-hidden cursor-pointer open-angles-trigger shrink-0" data-sku="${p.sku}">
             <img class="w-full h-full card-dummy-img group-hover:scale-105 transition-transform duration-500" 
                  src="${primaryImg}" 
                  alt="${p.title}" 
@@ -341,14 +375,14 @@
               <span class="font-label-code text-label-code bg-on-background/90 backdrop-blur-sm text-on-primary px-2 py-0.5 rounded-full uppercase tracking-wider">
                 ${p.sku}
               </span>
-              <span class="inline-flex items-center gap-1 font-label-code text-label-code bg-brand-gold-deep/90 backdrop-blur-sm text-on-primary px-2 py-0.5 rounded-full">
-                <span class="material-symbols-outlined text-[12px]">accessibility_new</span> Mannequin
+              <span class="inline-flex items-center gap-1 font-label-code text-label-code ${isApparel ? 'bg-brand-gold-deep/90 text-on-primary' : 'bg-surface-card/90 text-on-surface'} backdrop-blur-sm px-2 py-0.5 rounded-full shadow-sm">
+                <span class="material-symbols-outlined text-[12px]">${catBadgeIcon}</span> ${catBadgeText}
               </span>
             </div>
 
             <!-- Top Right Heart Wishlist Button -->
             <div class="absolute top-3 right-3 flex items-center gap-1.5">
-              <button class="wishlist-btn w-8 h-8 rounded-full bg-surface-card/90 backdrop-blur-sm text-on-surface flex items-center justify-center hover:bg-surface-card hover:text-brand-coral transition-colors" data-sku="${p.sku}" title="Save to Favorites">
+              <button class="wishlist-btn w-8 h-8 rounded-full bg-surface-card/90 backdrop-blur-sm text-on-surface flex items-center justify-center hover:bg-surface-card hover:text-brand-coral transition-colors shadow-sm" data-sku="${p.sku}" title="Save to Favorites">
                 <span class="material-symbols-outlined text-[18px] ${isWishlisted ? 'text-brand-coral' : ''}" style="${isWishlisted ? "font-variation-settings: 'FILL' 1;" : ''}">favorite</span>
               </button>
             </div>
@@ -361,53 +395,53 @@
             </div>
           </div>
 
-          <!-- Card Body Details -->
+          <!-- Card Body Details: Perfectly flex-grow and justify-between -->
           <div class="p-4 flex flex-col flex-grow justify-between gap-3">
-            <div>
-              <div class="flex items-center justify-between text-on-surface-variant font-label-code text-label-code uppercase tracking-wider mb-1">
-                <span>${p.category_name || 'Boutique Collection'}</span>
-                <span class="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-medium">Available for Rent</span>
+            <div class="flex flex-col gap-1">
+              <div class="flex items-center justify-between text-on-surface-variant font-label-code text-label-code uppercase tracking-wider">
+                <span class="truncate max-w-[150px]">${p.category_name || 'Boutique Collection'}</span>
+                <span class="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-medium text-[11px] shrink-0">Available</span>
               </div>
               
               <h3 class="font-headline-sm text-[16px] leading-snug text-on-surface font-semibold line-clamp-1 group-hover:text-primary transition-colors cursor-pointer open-angles-trigger" data-sku="${p.sku}">
                 ${p.title}
               </h3>
               
-              <div class="flex items-center gap-2 mt-1.5 text-on-surface-variant font-body-sm text-body-sm">
-                <span class="flex items-center gap-1 text-[12px]">
+              <div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm text-[12px]">
+                <span class="flex items-center gap-1 shrink-0">
                   <span class="material-symbols-outlined text-[14px]">straighten</span> ${p.size || p.standard_size || 'Free Size'}
                 </span>
                 <span>•</span>
-                <span class="flex items-center gap-1 text-[12px]">
-                  <span class="inline-block w-2.5 h-2.5 rounded-full" style="background-color: ${colorDot};"></span>
-                  ${p.color || p.standard_color || 'Standard'}
+                <span class="flex items-center gap-1 truncate">
+                  <span class="inline-block w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${colorDot};"></span>
+                  <span class="truncate">${p.color || p.standard_color || 'Standard'}</span>
                 </span>
               </div>
             </div>
 
-            <!-- Pricing Tier breakdown -->
-            <div class="bg-surface-container-low rounded-lg p-2.5 flex items-center justify-between">
-              <div>
-                <span class="block font-label-code text-[10px] text-on-surface-variant uppercase tracking-wider">Rental Rate</span>
+            <!-- Pricing Box: Clean, structured 2-row layout with zero text squishing -->
+            <div class="bg-surface-container-low rounded-lg p-2.5 flex flex-col gap-1.5 border border-border-hairline/60">
+              <div class="flex items-center justify-between">
+                <span class="font-label-code text-[10px] text-on-surface-variant uppercase tracking-wider shrink-0">Rental Rate</span>
                 <div class="flex items-baseline gap-1">
-                  <span class="font-headline-sm text-headline-sm text-primary font-bold">${rentText}</span>
-                  <span class="font-body-sm text-body-sm text-on-surface-variant">/ 3 Days</span>
+                  <span class="font-headline-sm text-[15px] text-primary font-bold leading-none">${rentText}</span>
+                  ${p.rent ? '<span class="font-body-sm text-[11px] text-on-surface-variant">/ 3 Days</span>' : ''}
                 </div>
               </div>
-              <div class="text-right">
-                <span class="block font-label-code text-[10px] text-on-surface-variant uppercase tracking-wider">Security Deposit</span>
-                <span class="font-label-md text-label-md text-on-surface font-medium">${depositText}</span>
+              <div class="flex items-center justify-between pt-1 border-t border-border-hairline/40 text-[11px]">
+                <span class="font-label-code text-[10px] text-on-surface-variant uppercase tracking-wider shrink-0">Security Deposit</span>
+                <span class="font-label-md text-[11px] text-on-surface font-medium">${depositText}</span>
               </div>
             </div>
 
-            <!-- CTA Action Buttons -->
-            <div class="grid grid-cols-2 gap-2 pt-1">
-              <button class="view-angles-btn flex items-center justify-center gap-1 py-2 px-2.5 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high font-label-md text-label-md transition-colors" data-sku="${p.sku}">
+            <!-- CTA Action Buttons: Pinned to bottom with mt-auto for a straight alignment line -->
+            <div class="grid grid-cols-2 gap-2 pt-1 mt-auto">
+              <button class="view-angles-btn flex items-center justify-center gap-1 py-2 px-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high font-label-md text-label-md transition-colors" data-sku="${p.sku}">
                 <span class="material-symbols-outlined text-[16px]">visibility</span>
                 <span>Angles (${anglesCount})</span>
               </button>
               
-              <button class="add-tryon-btn flex items-center justify-center gap-1 py-2 px-2.5 rounded-lg bg-primary text-on-primary hover:bg-on-primary-container font-label-md text-label-md shadow-sm transition-all" data-sku="${p.sku}">
+              <button class="add-tryon-btn flex items-center justify-center gap-1 py-2 px-2 rounded-lg bg-primary text-on-primary hover:bg-on-primary-container font-label-md text-label-md shadow-sm transition-all" data-sku="${p.sku}">
                 <span class="material-symbols-outlined text-[16px]">styler</span>
                 <span>+ Try-On</span>
               </button>
