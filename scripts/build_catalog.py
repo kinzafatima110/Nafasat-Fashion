@@ -243,9 +243,54 @@ def standardize_size(raw_size):
     else:
         return "Free Size"
 
-def clean_sku(filename):
+def clean_sku(filename, cat_id=None):
     name, _ = os.path.splitext(filename.strip())
     name = name.strip()
+
+    # Specific clusters
+    if cat_id == 'female-partywear':
+        if '20231118_1213' in name or name == 'DSC02273':
+            return 'NRFAP02273'
+
+    if cat_id == 'jewelry':
+        if name in ['DSC04746', 'DSC04747', 'DSC04748']:
+            return 'NRFJ04746'
+
+    if cat_id == 'saree':
+        if name.startswith('20231202_0953'): return 'SAREE-0953'
+        if name.startswith('20231202_0955'): return 'SAREE-0955'
+        if name.startswith('20231202_0956'): return 'SAREE-0956'
+        if name.startswith('20231202_0957') or name.startswith('20231202_0958'): return 'SAREE-0957'
+        if name.startswith('20231202_0959') or name.startswith('20231202_1000') or name.startswith('20231202_1001') or name.startswith('20231202_1002'): return 'SAREE-0959'
+        if name in ['DSC02952', 'DSC02953', 'DSC02954']: return 'SAREE-02952'
+        if name in ['DSC02972', 'DSC02973']: return 'SAREE-02972'
+        if name in ['DSC02989', 'DSC02990', 'DSC02991', 'DSC02992']: return 'SAREE-02989'
+        if name in ['DSC03127', 'DSC03129']: return 'SAREE-03127'
+        if name in ['DSC03136', 'DSC03137']: return 'SAREE-03136'
+        if name in ['DSC03147', 'DSC03148', 'DSC03151']: return 'SAREE-03147'
+        if name in ['DSC03169', 'DSC03170', 'DSC03171', 'DSC03172', 'DSC03173', 'DSC03174']: return 'SAREE-03169'
+        if name in ['DSC03178', 'DSC03180']: return 'SAREE-03178'
+
+    if cat_id == 'shoes':
+        if name.startswith('20231111_1342'): return 'SHOE-1342'
+        if name in ['20231111_134502', '20231111_134546']: return 'SHOE-1345'
+        if name.startswith('20231111_1346') or name.startswith('20231111_1347'): return 'SHOE-1346'
+        if name in ['20231111_134826', '20231111_134840']: return 'SHOE-1348'
+        if name.startswith('20231111_1349') or name.startswith('20231111_1350'): return 'SHOE-1349'
+        if name in ['20231118_112600', '20231118_112609']: return 'SHOE-1126'
+        if name in ['20231118_112640', '20231118_112655']: return 'SHOE-112640'
+        if name.startswith('20231118_1127'): return 'SHOE-1127'
+        if name.startswith('20231118_1128'): return 'SHOE-1128'
+        if name in ['DSC02166', 'DSC02168']: return 'SHOE-02166'
+
+    if cat_id == 'kids-rental':
+        if name in ['DSC03258', 'DSC03259', 'DSC03261']: return 'NRFK-03258'
+        if name in ['DSC03302', 'DSC03303', 'DSC03304', 'DSC03305', 'DSC03306', 'DSC03307', 'DSC03309']: return 'NRFK-03302'
+        if name in ['DSC03323', 'DSC03326']: return 'NRFK-03323'
+        if name in ['DSC03346', 'DSC03348']: return 'NRFK-03346'
+        if name in ['DSC04950', 'DSC04951', 'DSC04953']: return 'NRFK-04950'
+        if name in ['DSC04996', 'DSC04997']: return 'NRFK-04996'
+
     match = re.match(r"^(.+?)\s*\(\d+\)$", name)
     sku = match.group(1).strip() if match else name
     if re.match(r"^[a-zA-Z]{4,6}\d+$", sku):
@@ -341,7 +386,7 @@ def build():
             if not os.path.isfile(src_file):
                 continue
 
-            sku = clean_sku(fname)
+            sku = clean_sku(fname, cat["category_id"])
             if sku not in files_by_sku:
                 files_by_sku[sku] = []
             files_by_sku[sku].append(fname)
