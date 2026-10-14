@@ -393,6 +393,314 @@ def admin_delete_item():
         return jsonify({'success': False, 'error': f"Failed to delete item: {str(e)}"}), 500
 
 
+
+# =========================================================================
+# EXCEL BULK CATALOGUE SYNC & TEMPLATE DOWNLOAD
+# =========================================================================
+
+EXACT_EXCEL_COLUMNS = [
+    'SKU',
+    'Category',
+    'Title',
+    'Color',
+    'Size',
+    'Rent',
+    'Deposit',
+    'Description',
+    'Primary Image',
+    'Additional Images'
+]
+
+def resolve_category(raw_val):
+    if not raw_val:
+        return None, None
+    clean = str(raw_val).strip().lower()
+    for cat in CATEGORIES:
+        if clean == cat['name'].lower() or clean == cat['id'].lower():
+            return cat['id'], cat['name']
+    if 'bridal' in clean:
+        return 'rental-bridal', 'Bridal Wear'
+    if 'party' in clean:
+        return 'female-partywear', 'Party Wear'
+    if 'saree' in clean or 'sari' in clean:
+        return 'saree', 'Sarees'
+    if 'jewel' in clean:
+        return 'jewelry', 'Jewelry'
+    if 'girl' in clean or ('kid' in clean and 'girl' in clean):
+        return 'kids-rental', 'Girls Rental'
+    if 'coat' in clean or 'pant' in clean or 'suit' in clean or 'tuxedo' in clean:
+        return 'kids-coatpant', 'Boys Coat-Pants'
+    if 'purse' in clean or 'clutch' in clean or 'bag' in clean:
+        return 'purses', 'Clutches & Purses'
+    if 'shoe' in clean or 'heel' in clean or 'footwear' in clean:
+        return 'shoes', 'Footwear'
+    if 'sherwani' in clean:
+        return 'kids-sherwani', 'Boys Sherwani'
+    return None, None
+
+
+@app.route('/api/admin/download-template', methods=['GET'])
+def download_excel_template():
+    template_path = os.path.join(BASE_DIR, 'data', 'Nafasat_Catalogue_Template.xlsx')
+    if not os.path.exists(template_path):
+        return jsonify({'success': False, 'error': 'Template file not found.'}), 404
+    return send_from_directory(
+        os.path.join(BASE_DIR, 'data'),
+        'Nafasat_Catalogue_Template.xlsx',
+        as_attachment=True,
+        download_name='Nafasat_Catalogue_Template.xlsx'
+    )
+
+
+def parse_and_validate_excel_workbook(file_storage):
+    """
+    Strictly validates columns of an uploaded Excel file.
+    Returns (is_valid, error_payload, parsed_rows_or_none)
+    """
+    try:
+        import openpyxl
+        wb = openpyxl.load_workbook(file_storage, data_only=True)
+    except Exception as e:
+        return False, {'error': f'Failed to read Excel workbook: {str(e)}. Please ensure the file is a valid .xlsx spreadsheet.'}, None
+
+    # Find sheet: prefer 'Catalogue_Data', otherwise first worksheet
+    sheet_names = wb.sheetnames
+    target_sheet = None
+    for name in sheet_names:
+        if name.strip().lower() == 'catalogue_data':
+            target_sheet = wb[name]
+            break
+    if target_sheet is None:
+        target_sheet = wb.worksheets[0]
+
+    # Read headers from row 1
+    header_cells = [c.value for c in target_sheet[1]]
+    raw_headers = [str(h).strip() if h is not None else '' for h in header_cells]
+    while raw_headers and not raw_headers[-1]:
+        raw_headers.pop()
+
+    norm_expected = [h.strip().upper() for h in EXACT_EXCEL_COLUMNS]
+    norm_actual = [h.strip().upper() for h in raw_headers]
+
+    expected_set = set(norm_expected)
+    actual_set = set(norm_actual)
+
+    missing_cols = [orig for orig, norm in zip(EXACT_EXCEL_COLUMNS, norm_expected) if norm not in actual_set]
+    unexpected_cols = [orig for orig, norm in zip(raw_headers, norm_actual) if norm not in expected_set]
+
+    # Strict Check: exactly the allowed columns, no extra, no missing
+    if missing_cols or unexpected_cols or norm_actual != norm_expected:
+        error_msg = 'Spreadsheet column format rejected. The uploaded file must contain ONLY the 10 exact accepted columns. Any additional random column or different column names will not be accepted.'
+        return False, {
+            'error': error_msg,
+            'missing_columns': missing_cols,
+            'unexpected_columns': unexpected_cols,
+            'expected_columns': EXACT_EXCEL_COLUMNS,
+            'found_columns': raw_headers
+        }, None
+
+    # Parse data rows
+    col_indices = {norm_actual[i]: i for i in range(len(norm_actual)) if norm_actual[i] in expected_set}
+    rows = list(target_sheet.iter_rows(min_row=2, values_only=True))
+
+    parsed_items = []
+    row_errors = []
+
+    for row_num, row_values in enumerate(rows, start=2):
+        row_list = list(row_values)
+        if not any(cell is not None and str(cell).strip() != '' for cell in row_list):
+            continue
+
+        def get_val(col_name):
+            idx = col_indices.get(col_name.upper())
+            if idx is not None and idx < len(row_list):
+                v = row_list[idx]
+                return '' if v is None else str(v).strip()
+            return ''
+
+        sku = get_val('SKU').upper()
+        cat_raw = get_val('Category')
+        title = get_val('Title')
+        color = get_val('Color')
+        size = get_val('Size')
+        rent_val = re.sub(r'[^\d]', '', get_val('Rent'))
+        deposit_val = re.sub(r'[^\d]', '', get_val('Deposit'))
+        desc = get_val('Description')
+        primary_img = get_val('Primary Image')
+        add_imgs_raw = get_val('Additional Images')
+
+        if not sku:
+            row_errors.append(f'Row {row_num}: Missing SKU / Item Code.')
+            continue
+
+        cat_id, cat_name = resolve_category(cat_raw)
+        if not cat_id:
+            row_errors.append(f"Row {row_num} (SKU: {sku}): Unrecognized Category '{cat_raw}'. Allowed categories are: Bridal Wear, Party Wear, Jewelry, Girls Rental, Boys Coat-Pants, Sarees, Clutches & Purses, Footwear, Boys Sherwani.")
+            continue
+
+        if not title:
+            title = f"{cat_name} {sku}"
+
+        std_color = standardize_color(color)
+        std_size = standardize_size(size)
+
+        images_list = []
+        if primary_img:
+            images_list.append(primary_img)
+
+        if add_imgs_raw:
+            for part in re.split(r'[,;]', add_imgs_raw):
+                p = part.strip()
+                if p and p not in images_list:
+                    images_list.append(p)
+
+        if not images_list:
+            images_list = ['assets/logo.png']
+            primary_img = 'assets/logo.png'
+
+        parsed_items.append({
+            'row_num': row_num,
+            'sku': sku,
+            'category_id': cat_id,
+            'category_name': cat_name,
+            'title': title,
+            'color': color or std_color,
+            'standard_color': std_color,
+            'size': size or std_size,
+            'standard_size': std_size,
+            'rent': rent_val,
+            'deposit': deposit_val,
+            'description': desc or f"Exclusive {cat_name} ensemble available for rent at Nafasat.",
+            'primary_image': primary_img,
+            'images': images_list,
+            'image_count': len(images_list)
+        })
+
+    return True, {'row_errors': row_errors}, parsed_items
+
+
+@app.route('/api/admin/validate-excel', methods=['POST'])
+@admin_required
+def admin_validate_excel():
+    if 'excel_file' not in request.files:
+        return jsonify({'success': False, 'error': 'No Excel file was uploaded.'}), 400
+
+    file = request.files['excel_file']
+    if not file.filename.lower().endswith(('.xlsx', '.xls')):
+        return jsonify({'success': False, 'error': 'Only Excel files (.xlsx, .xls) are accepted.'}), 400
+
+    is_valid, err_or_info, parsed_items = parse_and_validate_excel_workbook(file)
+    if not is_valid:
+        return jsonify({
+            'success': False,
+            'error': err_or_info.get('error'),
+            'missing_columns': err_or_info.get('missing_columns', []),
+            'unexpected_columns': err_or_info.get('unexpected_columns', []),
+            'expected_columns': err_or_info.get('expected_columns', []),
+            'found_columns': err_or_info.get('found_columns', [])
+        }), 400
+
+    row_errors = err_or_info.get('row_errors', [])
+    preview = parsed_items[:8] if parsed_items else []
+
+    return jsonify({
+        'success': True,
+        'message': 'Column format verified successfully!',
+        'total_valid_rows': len(parsed_items),
+        'row_errors': row_errors,
+        'preview': preview
+    })
+
+
+@app.route('/api/admin/upload-excel', methods=['POST'])
+@admin_required
+def admin_upload_excel():
+    try:
+        if 'excel_file' not in request.files:
+            return jsonify({'success': False, 'error': 'No Excel file was uploaded.'}), 400
+
+        file = request.files['excel_file']
+        mode = (request.form.get('mode') or 'merge').strip().lower()
+
+        if not file.filename.lower().endswith(('.xlsx', '.xls')):
+            return jsonify({'success': False, 'error': 'Only Excel files (.xlsx, .xls) are accepted.'}), 400
+
+        is_valid, err_or_info, parsed_items = parse_and_validate_excel_workbook(file)
+        if not is_valid:
+            return jsonify({
+                'success': False,
+                'error': err_or_info.get('error'),
+                'missing_columns': err_or_info.get('missing_columns', []),
+                'unexpected_columns': err_or_info.get('unexpected_columns', []),
+                'expected_columns': err_or_info.get('expected_columns', []),
+                'found_columns': err_or_info.get('found_columns', [])
+            }), 400
+
+        if not parsed_items:
+            return jsonify({'success': False, 'error': 'The Excel file does not contain any valid data rows to import.'}), 400
+
+        data = load_products_data()
+        existing_products = data.get('products', [])
+
+        added_count = 0
+        updated_count = 0
+
+        if mode == 'replace':
+            new_products_list = []
+            for idx, item in enumerate(parsed_items, 1):
+                item_copy = dict(item)
+                item_copy.pop('row_num', None)
+                item_copy['id'] = idx
+                new_products_list.append(item_copy)
+            data['products'] = new_products_list
+            added_count = len(new_products_list)
+        else:
+            sku_map = {p.get('sku', '').upper(): i for i, p in enumerate(existing_products) if p.get('sku')}
+
+            for item in parsed_items:
+                item_copy = dict(item)
+                item_copy.pop('row_num', None)
+                sku = item_copy['sku']
+
+                if sku in sku_map:
+                    target_idx = sku_map[sku]
+                    item_copy['id'] = existing_products[target_idx].get('id', target_idx + 1)
+                    existing_products[target_idx] = item_copy
+                    updated_count += 1
+                else:
+                    item_copy['id'] = len(existing_products) + 1
+                    existing_products.insert(0, item_copy)
+                    added_count += 1
+                    sku_map[sku] = 0
+
+            for idx, p in enumerate(existing_products, 1):
+                p['id'] = idx
+            data['products'] = existing_products
+
+        cat_counts = {}
+        for p in data['products']:
+            cid = p.get('category_id')
+            if cid:
+                cat_counts[cid] = cat_counts.get(cid, 0) + 1
+
+        for c in data.get('categories', []):
+            c['count'] = cat_counts.get(c['id'], 0)
+
+        save_products_data(data)
+
+        return jsonify({
+            'success': True,
+            'message': f"Excel sync complete! {added_count} outfits added, {updated_count} updated. Total catalogue size: {len(data['products'])} items.",
+            'added_count': added_count,
+            'updated_count': updated_count,
+            'total_items': len(data['products'])
+        })
+
+    except Exception as e:
+        app.logger.exception(e)
+        return jsonify({'success': False, 'error': f"Failed to sync Excel: {str(e)}"}), 500
+
+
 # Fallback for static assets in development
 @app.route('/<path:filename>')
 def serve_static(filename):

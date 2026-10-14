@@ -119,6 +119,9 @@
         <button class="tab-btn" data-tab="manageOutfitsTab">
           <i class="fa-solid fa-list-check"></i> Manage Outfits (<span id="tabCountBadge">--</span>)
         </button>
+        <button class="tab-btn" data-tab="excelUploadTab">
+          <i class="fa-solid fa-file-excel text-success"></i> Bulk Excel Upload
+        </button>
       </div>
 
       <!-- TAB 1: ADD NEW OUTFIT -->
@@ -362,6 +365,131 @@
           <div class="table-footer-bar">
             <span id="tableCountSummary">Showing 0 outfits</span>
           </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: BULK EXCEL UPLOAD -->
+      <div id="excelUploadTab" class="tab-pane">
+        <div class="admin-panel">
+          
+          <div class="panel-header">
+            <div>
+              <h3><i class="fa-solid fa-file-excel text-success"></i> Bulk Excel Upload & Synchronization</h3>
+              <p class="panel-subtitle">Upload your catalogue data in bulk using Microsoft Excel (.xlsx). Strict format validation protects your showroom inventory from corrupted or misaligned data.</p>
+            </div>
+          </div>
+
+          <!-- 1. Download Template Card -->
+          <div class="excel-template-card">
+            <div class="template-card-icon">
+              <i class="fa-solid fa-file-excel"></i>
+            </div>
+            <div class="template-card-content">
+              <h4>Official Catalogue Excel Template</h4>
+              <p>Download our official spreadsheet template. It contains the exact 10 required columns, built-in validation dropdowns for categories and sizes, and reference sample data.</p>
+              <div class="template-card-badges">
+                <span class="badge-tag badge-gold"><i class="fa-solid fa-lock"></i> Only Accepted Format</span>
+                <span class="badge-tag"><i class="fa-solid fa-table-columns"></i> 10 Exact Columns</span>
+                <span class="badge-tag"><i class="fa-solid fa-circle-info"></i> Includes Guidelines Sheet</span>
+              </div>
+            </div>
+            <div class="template-card-action">
+              <a href="/api/admin/download-template" class="btn btn-primary btn-lg" download="Nafasat_Catalogue_Template.xlsx">
+                <i class="fa-solid fa-file-arrow-down"></i> Download Template (.xlsx)
+              </a>
+            </div>
+          </div>
+
+          <!-- 2. Strict Column Policy Alert Callout -->
+          <div class="strict-policy-alert">
+            <div class="strict-alert-icon">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="strict-alert-body">
+              <h5>Strict Column Format Policy</h5>
+              <p>To preserve catalog integrity, your uploaded spreadsheet must contain <strong>ONLY</strong> these 10 exact column headers in the first row of Sheet 1:</p>
+              <div class="exact-columns-pills">
+                <span class="col-pill">1. SKU</span>
+                <span class="col-pill">2. Category</span>
+                <span class="col-pill">3. Title</span>
+                <span class="col-pill">4. Color</span>
+                <span class="col-pill">5. Size</span>
+                <span class="col-pill">6. Rent</span>
+                <span class="col-pill">7. Deposit</span>
+                <span class="col-pill">8. Description</span>
+                <span class="col-pill">9. Primary Image</span>
+                <span class="col-pill">10. Additional Images</span>
+              </div>
+              <small class="strict-alert-warning"><i class="fa-solid fa-ban"></i> <strong>Important:</strong> Any additional random columns (e.g. Supplier, Cost) or renamed columns will be <u>automatically rejected</u>.</small>
+            </div>
+          </div>
+
+          <!-- 3. Excel Upload Form & Dropzone -->
+          <form id="excelUploadForm" class="excel-upload-form" enctype="multipart/form-data">
+            
+            <div class="excel-dropzone-wrapper">
+              <div class="dropzone excel-dropzone" id="excelDropzone">
+                <input type="file" id="excelFileInput" name="excel_file" accept=".xlsx, .xls, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" class="file-input-hidden" required>
+                <div class="dropzone-empty" id="excelDropzoneEmpty">
+                  <div class="dropzone-icon text-success"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                  <p class="dropzone-prompt"><strong>Click to browse</strong> or drag & drop your completed Excel spreadsheet (.xlsx)</p>
+                  <span class="dropzone-subtext">Must match the 10 official columns exactly</span>
+                </div>
+                <div class="dropzone-preview hidden" id="excelDropzonePreview">
+                  <div class="excel-preview-file-box">
+                    <i class="fa-solid fa-file-excel excel-file-large-icon"></i>
+                    <div class="excel-file-details">
+                      <span id="excelFileName" class="preview-name font-bold">Catalogue.xlsx</span>
+                      <span id="excelFileSize" class="preview-meta-size">14.2 KB</span>
+                    </div>
+                    <button type="button" class="preview-remove-btn" id="removeExcelBtn" title="Remove file">
+                      <i class="fa-solid fa-xmark"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Import Mode Selection -->
+            <div class="excel-options-row">
+              <div class="form-group">
+                <label class="font-bold"><i class="fa-solid fa-sliders"></i> Import Mode</label>
+                <div class="import-mode-radios">
+                  <label class="radio-card active" id="modeMergeLabel">
+                    <input type="radio" name="mode" value="merge" checked>
+                    <div class="radio-card-content">
+                      <span class="radio-title"><i class="fa-solid fa-code-merge"></i> Merge & Update (Recommended)</span>
+                      <span class="radio-desc">Updates details for existing SKUs and appends newly added outfits. Existing unmentioned items are preserved.</span>
+                    </div>
+                  </label>
+                  <label class="radio-card" id="modeReplaceLabel">
+                    <input type="radio" name="mode" value="replace">
+                    <div class="radio-card-content">
+                      <span class="radio-title text-danger"><i class="fa-solid fa-rotate"></i> Replace Entire Catalogue</span>
+                      <span class="radio-desc">Overwrites the catalogue so it contains only items present in this spreadsheet.</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="excel-actions-row">
+              <button type="button" id="validateExcelBtn" class="btn btn-secondary btn-lg" disabled>
+                <i class="fa-solid fa-list-check"></i> Validate Spreadsheet Format
+              </button>
+              <button type="submit" id="submitExcelBtn" class="btn btn-primary btn-lg" disabled>
+                <i class="fa-solid fa-cloud-arrow-up"></i> Confirm & Sync to Catalogue
+              </button>
+            </div>
+
+          </form>
+
+          <!-- 4. Validation Feedback & Results Container -->
+          <div id="excelValidationFeedback" class="validation-feedback-container hidden">
+            <!-- Rendered dynamically by js/admin.js -->
+          </div>
+
         </div>
       </div>
 

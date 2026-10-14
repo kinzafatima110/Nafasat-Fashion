@@ -14,6 +14,7 @@
     categories: [],
     selectedDummyFile: null,
     selectedAngleFiles: [],
+    selectedExcelFile: null,
     allProducts: []
   };
 
@@ -111,7 +112,22 @@
     // Toast
     adminToast: document.getElementById('adminToast'),
     toastIcon: document.getElementById('toastIcon'),
-    adminToastMsg: document.getElementById('adminToastMsg')
+    adminToastMsg: document.getElementById('adminToastMsg'),
+
+    // Excel Bulk Upload
+    excelUploadForm: document.getElementById('excelUploadForm'),
+    excelDropzone: document.getElementById('excelDropzone'),
+    excelFileInput: document.getElementById('excelFileInput'),
+    excelDropzoneEmpty: document.getElementById('excelDropzoneEmpty'),
+    excelDropzonePreview: document.getElementById('excelDropzonePreview'),
+    excelFileName: document.getElementById('excelFileName'),
+    excelFileSize: document.getElementById('excelFileSize'),
+    removeExcelBtn: document.getElementById('removeExcelBtn'),
+    modeMergeLabel: document.getElementById('modeMergeLabel'),
+    modeReplaceLabel: document.getElementById('modeReplaceLabel'),
+    validateExcelBtn: document.getElementById('validateExcelBtn'),
+    submitExcelBtn: document.getElementById('submitExcelBtn'),
+    excelValidationFeedback: document.getElementById('excelValidationFeedback')
   };
 
   let pendingDeleteSku = null;
@@ -254,6 +270,9 @@
     });
 
     dom.confirmProceedBtn.addEventListener('click', executeDeleteItem);
+
+    // Setup Excel Bulk Upload
+    setupExcelUploadTab();
   }
 
   // =========================================================================
@@ -731,6 +750,290 @@
     } finally {
       dom.confirmProceedBtn.disabled = false;
       dom.confirmProceedBtn.innerHTML = 'Delete Outfit';
+    }
+  }
+
+  // =========================================================================
+  // EXCEL BULK UPLOAD TAB CONTROLLER
+  // =========================================================================
+  function setupExcelUploadTab() {
+    const dz = dom.excelDropzone;
+    const input = dom.excelFileInput;
+    if (!dz || !input) return;
+
+    // Radio Card Toggles
+    if (dom.modeMergeLabel && dom.modeReplaceLabel) {
+      dom.modeMergeLabel.addEventListener('click', () => {
+        dom.modeMergeLabel.classList.add('active');
+        dom.modeReplaceLabel.classList.remove('active');
+      });
+      dom.modeReplaceLabel.addEventListener('click', () => {
+        dom.modeReplaceLabel.classList.add('active');
+        dom.modeMergeLabel.classList.remove('active');
+      });
+    }
+
+    // Dropzone Click
+    dz.addEventListener('click', (e) => {
+      if (e.target.closest('#removeExcelBtn')) return;
+      input.click();
+    });
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dz.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dz.classList.add('dropzone-dragover');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dz.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dz.classList.remove('dropzone-dragover');
+      });
+    });
+
+    dz.addEventListener('drop', (e) => {
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        setExcelFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    input.addEventListener('change', (e) => {
+      if (input.files && input.files.length > 0) {
+        setExcelFile(input.files[0]);
+      }
+    });
+
+    if (dom.removeExcelBtn) {
+      dom.removeExcelBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        clearExcelFile();
+      });
+    }
+
+    // Validate Button
+    if (dom.validateExcelBtn) {
+      dom.validateExcelBtn.addEventListener('click', () => {
+        if (adminState.selectedExcelFile) {
+          validateExcelSpreadsheet(adminState.selectedExcelFile);
+        }
+      });
+    }
+
+    // Submit Form
+    if (dom.excelUploadForm) {
+      dom.excelUploadForm.addEventListener('submit', handleExcelUploadSubmit);
+    }
+  }
+
+  function setExcelFile(file) {
+    if (!file) return;
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!['xlsx', 'xls'].includes(ext)) {
+      showToast('Please select a valid Excel file (.xlsx or .xls)', 'error');
+      return;
+    }
+
+    adminState.selectedExcelFile = file;
+    if (dom.excelFileName) dom.excelFileName.textContent = file.name;
+    if (dom.excelFileSize) {
+      const kb = (file.size / 1024).toFixed(1);
+      dom.excelFileSize.textContent = `${kb} KB`;
+    }
+
+    if (dom.excelDropzoneEmpty) dom.excelDropzoneEmpty.classList.add('hidden');
+    if (dom.excelDropzonePreview) dom.excelDropzonePreview.classList.remove('hidden');
+    if (dom.validateExcelBtn) dom.validateExcelBtn.disabled = false;
+    if (dom.submitExcelBtn) dom.submitExcelBtn.disabled = false;
+    if (dom.excelValidationFeedback) {
+      dom.excelValidationFeedback.classList.add('hidden');
+      dom.excelValidationFeedback.innerHTML = '';
+    }
+
+    // Auto-trigger validation check
+    validateExcelSpreadsheet(file);
+  }
+
+  function clearExcelFile() {
+    adminState.selectedExcelFile = null;
+    if (dom.excelFileInput) dom.excelFileInput.value = '';
+    if (dom.excelDropzoneEmpty) dom.excelDropzoneEmpty.classList.remove('hidden');
+    if (dom.excelDropzonePreview) dom.excelDropzonePreview.classList.add('hidden');
+    if (dom.validateExcelBtn) dom.validateExcelBtn.disabled = true;
+    if (dom.submitExcelBtn) dom.submitExcelBtn.disabled = true;
+    if (dom.excelValidationFeedback) {
+      dom.excelValidationFeedback.classList.add('hidden');
+      dom.excelValidationFeedback.innerHTML = '';
+    }
+  }
+
+  async function validateExcelSpreadsheet(file) {
+    if (!dom.excelValidationFeedback) return;
+    dom.validateExcelBtn.disabled = true;
+    dom.validateExcelBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking Columns...';
+
+    const formData = new FormData();
+    formData.append('excel_file', file);
+
+    try {
+      const res = await fetch('/api/admin/validate-excel', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+
+      dom.excelValidationFeedback.classList.remove('hidden');
+
+      if (!res.ok || !data.success) {
+        const missingHtml = (data.missing_columns && data.missing_columns.length > 0)
+          ? `<div class="mb-2"><strong class="text-danger">Missing Required Columns:</strong> <span class="badge-tag badge-gold">${data.missing_columns.join(', ')}</span></div>`
+          : '';
+        const unexpectedHtml = (data.unexpected_columns && data.unexpected_columns.length > 0)
+          ? `<div class="mb-2"><strong class="text-danger">Unrecognized Random Columns Found:</strong> <span class="badge-tag bg-danger text-white">${data.unexpected_columns.join(', ')}</span></div>`
+          : '';
+
+        dom.excelValidationFeedback.innerHTML = `
+          <div class="feedback-card-error">
+            <div class="feedback-header">
+              <i class="fa-solid fa-circle-xmark text-danger" style="font-size: 24px;"></i>
+              <h5 class="text-danger">Spreadsheet Rejected: Invalid Column Format</h5>
+            </div>
+            <p class="mb-2 font-medium">${data.error || 'The uploaded spreadsheet does not match the strict official column structure.'}</p>
+            <div class="feedback-discrepancy-box">
+              ${missingHtml}
+              ${unexpectedHtml}
+              <div class="mt-2 text-muted">
+                <strong>Strict Rule:</strong> Uploaded spreadsheets must contain <u>ONLY</u> the 10 official columns:
+                <br><em>SKU, Category, Title, Color, Size, Rent, Deposit, Description, Primary Image, Additional Images</em>
+              </div>
+            </div>
+            <div class="mt-3">
+              <a href="/api/admin/download-template" class="btn btn-outline btn-sm">
+                <i class="fa-solid fa-file-arrow-down"></i> Download Official Template to Fix Format
+              </a>
+            </div>
+          </div>
+        `;
+        if (dom.submitExcelBtn) dom.submitExcelBtn.disabled = true;
+      } else {
+        const rowsCount = data.total_valid_rows || 0;
+        const previewRows = data.preview || [];
+        const previewHtml = previewRows.length > 0 ? `
+          <div class="table-responsive mt-3" style="max-height: 220px; overflow-y: auto;">
+            <table class="admin-table admin-table-sm" style="font-size: 0.82rem;">
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                  <th>Category</th>
+                  <th>Title</th>
+                  <th>Color</th>
+                  <th>Size</th>
+                  <th>Rent</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${previewRows.map(r => `
+                  <tr>
+                    <td><strong>${r.sku}</strong></td>
+                    <td>${r.category_name}</td>
+                    <td>${r.title}</td>
+                    <td>${r.color}</td>
+                    <td>${r.size}</td>
+                    <td>Rs. ${r.rent ? Number(r.rent).toLocaleString() : 'Inquire'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        ` : '';
+
+        dom.excelValidationFeedback.innerHTML = `
+          <div class="feedback-card-success">
+            <div class="feedback-header">
+              <i class="fa-solid fa-circle-check text-success" style="font-size: 24px;"></i>
+              <h5 class="text-success">Column Format Verified Successfully!</h5>
+            </div>
+            <p class="mb-1">All 10 required columns matched the official template perfectly. Ready to import <strong>${rowsCount} outfits</strong> into your digital showroom.</p>
+            ${previewHtml}
+          </div>
+        `;
+        if (dom.submitExcelBtn) dom.submitExcelBtn.disabled = false;
+      }
+    } catch (err) {
+      dom.excelValidationFeedback.classList.remove('hidden');
+      dom.excelValidationFeedback.innerHTML = `
+        <div class="feedback-card-error">
+          <div class="feedback-header">
+            <i class="fa-solid fa-circle-exclamation text-danger" style="font-size: 22px;"></i>
+            <h5 class="text-danger">Validation Error</h5>
+          </div>
+          <p>Failed to communicate with server for format validation. Please try again.</p>
+        </div>
+      `;
+    } finally {
+      dom.validateExcelBtn.disabled = false;
+      dom.validateExcelBtn.innerHTML = '<i class="fa-solid fa-list-check"></i> Validate Spreadsheet Format';
+    }
+  }
+
+  async function handleExcelUploadSubmit(e) {
+    e.preventDefault();
+    if (!adminState.selectedExcelFile) {
+      showToast('Please select an Excel file to upload.', 'error');
+      return;
+    }
+
+    const mode = document.querySelector('input[name="mode"]:checked')?.value || 'merge';
+
+    if (mode === 'replace') {
+      const confirmed = confirm('WARNING: You selected "Replace Entire Catalogue". This will OVERWRITE your current catalogue with only items from this spreadsheet. Are you sure?');
+      if (!confirmed) return;
+    }
+
+    dom.submitExcelBtn.disabled = true;
+    dom.submitExcelBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Synchronizing Catalogue...';
+
+    const formData = new FormData();
+    formData.append('excel_file', adminState.selectedExcelFile);
+    formData.append('mode', mode);
+
+    try {
+      const res = await fetch('/api/admin/upload-excel', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        showToast(data.message, 'success');
+        clearExcelFile();
+        await checkAuthStatus();
+        loadInventoryTable();
+
+        // Switch to Manage Outfits tab so admin sees the updated inventory
+        const manageTabBtn = document.querySelector('[data-tab="manageOutfitsTab"]');
+        if (manageTabBtn) manageTabBtn.click();
+      } else {
+        showToast(data.error || 'Failed to upload spreadsheet.', 'error');
+        if (dom.excelValidationFeedback) {
+          dom.excelValidationFeedback.classList.remove('hidden');
+          dom.excelValidationFeedback.innerHTML = `
+            <div class="feedback-card-error">
+              <div class="feedback-header">
+                <i class="fa-solid fa-circle-xmark text-danger" style="font-size: 22px;"></i>
+                <h5 class="text-danger">Upload Rejected</h5>
+              </div>
+              <p>${data.error || 'Spreadsheet processing failed.'}</p>
+            </div>
+          `;
+        }
+      }
+    } catch (err) {
+      showToast('Network error while uploading spreadsheet.', 'error');
+    } finally {
+      dom.submitExcelBtn.disabled = false;
+      dom.submitExcelBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Confirm & Sync to Catalogue';
     }
   }
 

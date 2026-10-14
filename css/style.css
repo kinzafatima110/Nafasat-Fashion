@@ -2167,3 +2167,274 @@ body {
 }
 
 
+
+
+/* =========================================================================
+   EXCEL BULK UPLOAD TAB STYLES
+   ========================================================================= */
+.excel-template-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(135deg, rgba(27, 28, 26, 0.04) 0%, rgba(212, 175, 55, 0.08) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.template-card-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: #107C41;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(16, 124, 65, 0.25);
+}
+
+.template-card-content {
+  flex: 1;
+}
+
+.template-card-content h4 {
+  margin: 0 0 6px 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1B1C1A;
+}
+
+.template-card-content p {
+  margin: 0 0 10px 0;
+  font-size: 0.88rem;
+  color: #555555;
+  line-height: 1.45;
+}
+
+.template-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.strict-policy-alert {
+  display: flex;
+  gap: 16px;
+  background: #FFFDF5;
+  border: 1px solid #F5C672;
+  border-left: 5px solid #D4AF37;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 28px;
+}
+
+.strict-alert-icon {
+  color: #D4AF37;
+  font-size: 24px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.strict-alert-body h5 {
+  margin: 0 0 8px 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #7A5200;
+}
+
+.strict-alert-body p {
+  margin: 0 0 12px 0;
+  font-size: 0.9rem;
+  color: #333333;
+}
+
+.exact-columns-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.col-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  background: #1B1C1A;
+  color: #FFFFFF;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.strict-alert-warning {
+  display: block;
+  color: #B3001B;
+  font-size: 0.85rem;
+  margin-top: 6px;
+}
+
+.excel-dropzone-wrapper {
+  margin-bottom: 24px;
+}
+
+.excel-dropzone {
+  min-height: 160px;
+  border: 2px dashed #B8860B;
+  background: #FAFAF8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+}
+
+.excel-dropzone:hover {
+  border-color: #835500;
+  background: #F5F3EF;
+}
+
+.excel-preview-file-box {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #FFFFFF;
+  padding: 16px 20px;
+  border-radius: 10px;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.excel-file-large-icon {
+  font-size: 36px;
+  color: #107C41;
+}
+
+.excel-file-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-meta-size {
+  font-size: 0.8rem;
+  color: #6C757D;
+}
+
+.import-mode-radios {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .import-mode-radios {
+    grid-template-columns: 1fr;
+  }
+  .excel-template-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.radio-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  background: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.radio-card:hover {
+  border-color: #D4AF37;
+  background: #FFFDF8;
+}
+
+.radio-card.active {
+  border-color: #835500;
+  background: #FAF6EE;
+  box-shadow: 0 0 0 1px #835500;
+}
+
+.radio-card input {
+  margin-top: 3px;
+}
+
+.radio-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.radio-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #1B1C1A;
+}
+
+.radio-desc {
+  font-size: 0.82rem;
+  color: #6C757D;
+  line-height: 1.4;
+}
+
+.excel-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #E5DFD7;
+}
+
+.validation-feedback-container {
+  margin-top: 28px;
+}
+
+.feedback-card-success {
+  background: #F0FDF4;
+  border: 1px solid #86EFAC;
+  border-left: 5px solid #22C55E;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.feedback-card-error {
+  background: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  border-left: 5px solid #EF4444;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.feedback-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.feedback-header h5 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.feedback-discrepancy-box {
+  background: #FFFFFF;
+  border: 1px solid #FCA5A5;
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 12px 0;
+  font-size: 0.88rem;
+}
